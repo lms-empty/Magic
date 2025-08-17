@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>拾级而上，自适而学 - 知识图谱驱动的智能数学学习推荐系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3B82F6",
+              secondary: "#10B981",
+              accent: "#8B5CF6",
+              deepseek: "#6366F1",
+              aimodel: "#F97316",
+              knowledge: "#4ADE80",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Dancing+Script:wght@400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", "Noto Sans SC", sans-serif;
+      }
+
+      .font-brand {
+        font-family: "Poppins", "Noto Sans SC", sans-serif;
+      }
+
+      .font-display {
+        font-family: "Poppins", "Noto Sans SC", sans-serif;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .font-heading {
+        font-family: "Poppins", "Noto Sans SC", sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .font-accent {
+        font-family: "Dancing Script", "Noto Sans SC", cursive;
+      }
+
+      .font-mono {
+        font-family: "JetBrains Mono", "Noto Sans SC", monospace;
+      }
+
+      .text-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .text-gradient-aimodel {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .text-gradient-kg {
+        background: linear-gradient(135deg, #4ade80 0%, #10b981 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      }
+      .scroll-reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s ease;
+      }
+      .scroll-reveal.revealed {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .floating-animation {
+        animation: float 6s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      /* 增强按钮点击效果 */
+      .btn-primary {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-primary::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+
+      .btn-primary:active::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      /* 回到顶部按钮 */
+      .back-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 100;
+      }
+
+      .back-to-top.visible {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .back-to-top:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      /* 聊天区域高亮动画 */
+      .chat-highlight {
+        animation: highlight 2s ease-in-out;
+      }
+
+      @keyframes highlight {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.02);
+        }
+      }
+
+      /* 对话框模态窗口样式 */
+      .chat-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .chat-modal.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .chat-container {
+        width: 95%;
+        max-width: 1200px;
+        height: 90%;
+        max-height: 800px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        transform: scale(0.8) translateY(50px);
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .chat-modal.active .chat-container {
+        transform: scale(1) translateY(0);
+      }
+
+      .chat-header {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        padding: 20px;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .chat-close {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      .chat-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+      }
+
+      .chat-iframe {
+        width: 100%;
+        height: calc(100% - 80px);
+        border: none;
+      }
+
+      /* 学习路径跳转弹窗样式 */
+      .path-redirect-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .path-redirect-modal.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .path-redirect-content {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 500px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        transform: scale(0.8) translateY(50px);
+        transition: all 0.3s ease;
+      }
+
+      .path-redirect-modal.active .path-redirect-content {
+        transform: scale(1) translateY(0);
+      }
+
+      .path-redirect-icon {
+        font-size: 60px;
+        margin-bottom: 20px;
+        display: block;
+      }
+
+      .path-redirect-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .path-redirect-message {
+        font-size: 16px;
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 30px;
+      }
+
+      .path-redirect-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+      }
+
+      .path-redirect-btn {
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        min-width: 120px;
+      }
+
+      .btn-redirect-confirm {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+      }
+
+      .btn-redirect-confirm:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      }
+
+      .btn-redirect-cancel {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+      }
+
+      .btn-redirect-cancel:hover {
+        background: #e5e7eb;
+        color: #374151;
+      }
+
+      /* 新增：知识检测弹窗样式 */
+      .knowledge-test-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .knowledge-test-modal.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .knowledge-test-content {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 500px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        transform: scale(0.8) translateY(50px);
+        transition: all 0.3s ease;
+      }
+
+      .knowledge-test-modal.active .knowledge-test-content {
+        transform: scale(1) translateY(0);
+      }
+
+      .knowledge-test-icon {
+        font-size: 60px;
+        margin-bottom: 20px;
+        display: block;
+      }
+
+      .knowledge-test-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .knowledge-test-message {
+        font-size: 16px;
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 30px;
+      }
+
+      .knowledge-test-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+      }
+
+      .knowledge-test-btn {
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        min-width: 120px;
+      }
+
+      .btn-test-confirm {
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        color: white;
+      }
+
+      .btn-test-confirm:hover {
+        background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+      }
+
+      .btn-test-cancel {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+      }
+
+      .btn-test-cancel:hover {
+        background: #e5e7eb;
+        color: #374151;
+      }
+
+      /* 侧边栏跳转按钮样式 */
+      .chat-sidebar {
+        position: absolute;
+        top: 0;
+        right: -80px;
+        width: 70px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(20px);
+        transition: all 0.5s ease;
+        z-index: 10;
+      }
+
+      .chat-sidebar.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+      }
+
+      .sidebar-jump-btn {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        transition: all 0.3s ease;
+        margin-bottom: 12px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sidebar-jump-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+      }
+
+      .sidebar-jump-btn:active {
+        transform: scale(0.95);
+      }
+
+      .sidebar-jump-btn::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+
+      .sidebar-jump-btn:active::before {
+        width: 120px;
+        height: 120px;
+      }
+
+      .sidebar-label {
+        font-size: 11px;
+        color: #059669;
+        font-weight: 600;
+        text-align: center;
+        line-height: 1.2;
+        margin-top: 4px;
+        opacity: 0.8;
+      }
+
+      /* 脉冲动画 */
+      .pulse-animation {
+        animation: sidebarPulse 2s infinite;
+      }
+
+      @keyframes sidebarPulse {
+        0%,
+        100% {
+          box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3),
+            0 0 0 0 rgba(16, 185, 129, 0.4);
+        }
+        50% {
+          box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3),
+            0 0 0 8px rgba(16, 185, 129, 0);
+        }
+      }
+
+      /* 响应式调整 */
+      @media (max-width: 768px) {
+        .chat-sidebar {
+          right: -70px;
+          width: 60px;
+        }
+
+        .sidebar-jump-btn {
+          width: 50px;
+          height: 50px;
+        }
+
+        .sidebar-label {
+          font-size: 10px;
+        }
+      }
+
+      /* ============ 知识图谱可视化动画 - 网络结构设计 ============ */
+
+      /* 知识图谱网络结构 */
+      .knowledge-graph {
+        position: relative;
+        width: 260px;
+        height: 140px;
+        margin: 0 auto;
+        background: linear-gradient(
+          135deg,
+          rgba(74, 222, 128, 0.03) 0%,
+          rgba(16, 185, 129, 0.03) 100%
+        );
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      /* 知识图谱节点 - 不同层级 */
+      .kg-node {
+        position: absolute;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: 2px solid rgba(16, 185, 129, 0.4);
+        animation: nodePulse 3s ease-in-out infinite;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+      }
+
+      /* 中心核心节点 */
+      .kg-node.center {
+        width: 20px;
+        height: 20px;
+        animation-delay: 0s;
+      }
+
+      /* 主要节点 */
+      .kg-node.major {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* 次要节点 */
+      .kg-node.minor {
+        width: 12px;
+        height: 12px;
+      }
+
+      /* 知识图谱连接线 */
+      .kg-connection {
+        position: absolute;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          #10b981 0%,
+          rgba(16, 185, 129, 0.6) 50%,
+          #10b981 100%
+        );
+        background-size: 200% 100%;
+        transform-origin: left center;
+        animation: connectionFlow 4s ease-in-out infinite;
+        border-radius: 1px;
+      }
+
+      /* 连接线的动画延迟 */
+      .kg-connection:nth-of-type(even) {
+        animation-delay: 1s;
+      }
+
+      .kg-connection:nth-of-type(3n) {
+        animation-delay: 2s;
+      }
+
+      @keyframes nodePulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
+        50% {
+          transform: scale(1.2);
+          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+        }
+      }
+
+      @keyframes connectionFlow {
+        0%,
+        100% {
+          background-position: 200% 0;
+          opacity: 0.6;
+        }
+        50% {
+          background-position: -200% 0;
+          opacity: 1;
+        }
+      }
+
+      /* DeepSeek AI 思维过程动画 */
+      .deepseek-thinking {
+        position: relative;
+        width: 200px;
+        height: 120px;
+        margin: 0 auto;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      .thinking-layer {
+        position: absolute;
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        color: white;
+        opacity: 0;
+        transform: translateX(-20px);
+        animation: thinkingProcess 8s ease-in-out infinite;
+      }
+
+      .thinking-layer:nth-child(1) {
+        top: 0px;
+        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        animation-delay: 0s;
+      }
+      .thinking-layer:nth-child(2) {
+        top: 25px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+        animation-delay: 2s;
+      }
+      .thinking-layer:nth-child(3) {
+        top: 50px;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        animation-delay: 4s;
+      }
+      .thinking-layer:nth-child(4) {
+        top: 75px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        animation-delay: 6s;
+      }
+
+      @keyframes thinkingProcess {
+        0%,
+        20% {
+          opacity: 0;
+          transform: translateX(-20px) scale(0.9);
+        }
+        25%,
+        75% {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(20px) scale(0.9);
+        }
+      }
+
+      /* 数学公式构建动画 */
+      .formula-builder {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .formula-element {
+        position: absolute;
+        font-size: 20px;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: "JetBrains Mono", monospace;
+        animation: buildFormula 12s linear infinite;
+        user-select: none;
+      }
+
+      @keyframes buildFormula {
+        0% {
+          opacity: 0;
+          transform: translateY(100vh) scale(0.5);
+        }
+        20% {
+          opacity: 1;
+          transform: translateY(50vh) scale(1);
+        }
+        80% {
+          opacity: 1;
+          transform: translateY(10vh) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-10vh) scale(0.5);
+        }
+      }
+
+      /* 解题步骤动画 */
+      .solution-steps {
+        position: relative;
+        width: 250px;
+        height: 120px;
+        margin: 0 auto;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      .step {
+        position: absolute;
+        left: 0;
+        font-size: 14px;
+        color: #374151;
+        opacity: 0;
+        transform: translateX(-20px);
+        animation: stepReveal 8s ease-in-out infinite;
+      }
+
+      .step:nth-child(1) {
+        top: 0;
+        animation-delay: 0s;
+      }
+      .step:nth-child(2) {
+        top: 25px;
+        animation-delay: 2s;
+      }
+      .step:nth-child(3) {
+        top: 50px;
+        animation-delay: 4s;
+      }
+      .step:nth-child(4) {
+        top: 75px;
+        animation-delay: 6s;
+      }
+
+      @keyframes stepReveal {
+        0%,
+        25% {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        50%,
+        75% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+      }
+
+      /* 学习路径可视化 */
+      .learning-pathway {
+        position: relative;
+        width: 280px;
+        height: 80px;
+        margin: 0 auto;
+      }
+
+      .pathway-line {
+        position: absolute;
+        top: 40px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          #e5e7eb 0%,
+          #3b82f6 50%,
+          #10b981 100%
+        );
+        background-size: 200% 100%;
+        animation: pathwayProgress 4s ease-in-out infinite;
+      }
+
+      .knowledge-point {
+        position: absolute;
+        top: 32px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        border: 2px solid #3b82f6;
+        animation: pointActivate 4s ease-in-out infinite;
+      }
+
+      .knowledge-point:nth-child(2) {
+        left: 20%;
+        animation-delay: 0.8s;
+      }
+      .knowledge-point:nth-child(3) {
+        left: 40%;
+        animation-delay: 1.6s;
+      }
+      .knowledge-point:nth-child(4) {
+        left: 60%;
+        animation-delay: 2.4s;
+      }
+      .knowledge-point:nth-child(5) {
+        left: 80%;
+        animation-delay: 3.2s;
+      }
+
+      @keyframes pathwayProgress {
+        0%,
+        100% {
+          background-position: 200% 0;
+        }
+        50% {
+          background-position: -200% 0;
+        }
+      }
+
+      @keyframes pointActivate {
+        0%,
+        80% {
+          background: #e5e7eb;
+          transform: scale(1);
+          box-shadow: none;
+        }
+        20%,
+        60% {
+          background: #10b981;
+          transform: scale(1.2);
+          box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.3);
+        }
+      }
+
+      /* 数据分析图表动画 */
+      .chart-visualization {
+        position: relative;
+        width: 160px;
+        height: 100px;
+        margin: 0 auto;
+      }
+
+      .chart-bar {
+        position: absolute;
+        bottom: 0;
+        width: 20px;
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+        border-radius: 2px 2px 0 0;
+        animation: barAnalyze 3s ease-in-out infinite;
+      }
+
+      .chart-bar:nth-child(1) {
+        left: 10px;
+        height: 30px;
+        animation-delay: 0s;
+      }
+      .chart-bar:nth-child(2) {
+        left: 35px;
+        height: 50px;
+        animation-delay: 0.2s;
+      }
+      .chart-bar:nth-child(3) {
+        left: 60px;
+        height: 70px;
+        animation-delay: 0.4s;
+      }
+      .chart-bar:nth-child(4) {
+        left: 85px;
+        height: 45px;
+        animation-delay: 0.6s;
+      }
+      .chart-bar:nth-child(5) {
+        left: 110px;
+        height: 60px;
+        animation-delay: 0.8s;
+      }
+
+      @keyframes barAnalyze {
+        0%,
+        20% {
+          transform: scaleY(0);
+        }
+        40%,
+        80% {
+          transform: scaleY(1);
+        }
+        100% {
+          transform: scaleY(0);
+        }
+      }
+
+      /* 知识网络连接 */
+      .knowledge-network {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .network-node {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: radial-gradient(circle, #60a5fa 0%, #3b82f6 100%);
+        border-radius: 50%;
+        animation: networkPulse 3s ease-in-out infinite;
+      }
+
+      .network-connection {
+        position: absolute;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(59, 130, 246, 0.5) 50%,
+          transparent 100%
+        );
+        animation: connectionFlow 4s ease-in-out infinite;
+      }
+
+      @keyframes networkPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+        }
+        50% {
+          transform: scale(1.3);
+          box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+        }
+      }
+
+      /* 学习进度环形图 */
+      .progress-circle {
+        width: 120px;
+        height: 120px;
+        position: relative;
+        display: inline-block;
+      }
+
+      .progress-circle svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+
+      .progress-circle .progress-bg {
+        fill: none;
+        stroke-width: 6;
+        stroke: #e5e7eb;
+      }
+
+      .progress-circle .progress-bar {
+        fill: none;
+        stroke-width: 6;
+        stroke: url(#progressGradient);
+        stroke-linecap: round;
+        stroke-dasharray: 283;
+        stroke-dashoffset: 283;
+        animation: progressGrow 3s ease-out infinite;
+      }
+
+      @keyframes progressGrow {
+        0% {
+          stroke-dashoffset: 283;
+        }
+        50% {
+          stroke-dashoffset: 70;
+        } /* 75% progress */
+        100% {
+          stroke-dashoffset: 283;
+        }
+      }
+
+      /* 技术标签动画 */
+      .tech-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        animation: badgePulse 2s ease-in-out infinite;
+      }
+
+      .tech-badge-aimodel {
+        background: linear-gradient(
+          135deg,
+          rgba(249, 115, 22, 0.1) 0%,
+          rgba(234, 88, 12, 0.1) 100%
+        );
+        color: #f97316;
+        border: 1px solid rgba(249, 115, 22, 0.3);
+      }
+
+      .tech-badge-kg {
+        background: linear-gradient(
+          135deg,
+          rgba(74, 222, 128, 0.1) 0%,
+          rgba(16, 185, 129, 0.1) 100%
+        );
+        color: #10b981;
+        border: 1px solid rgba(74, 222, 128, 0.3);
+      }
+
+      @keyframes badgePulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .tech-badge:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- 顶部导航栏 -->
+    <nav
+      class="bg-white/95 backdrop-blur-md shadow-sm fixed w-full z-50 border-b border-gray-100"
+    >
+      <div class="w-full px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center"
+            >
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                ></path>
+              </svg>
+            </div>
+            <div>
+              <h1
+                class="text-xl font-brand font-bold text-gray-900 tracking-tight"
+              >
+                拾级而上，自适而学
+              </h1>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs text-gray-500 font-medium tracking-wide"
+                  >知识图谱驱动的智能推荐系统</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="hidden md:flex items-center space-x-8">
+            <a
+              href="#"
+              class="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+              >首页</a
+            >
+            <a
+              href="#features"
+              class="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+              >技术特色</a
+            >
+            <a
+              href="#chat"
+              class="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+              >AI导师</a
+            >
+            <a
+              href="#about"
+              class="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+              >关于我们</a
+            >
+            <button
+              onclick="scrollToChat()"
+              class="btn-primary bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+            >
+              开始学习
+            </button>
+          </div>
+          <!-- 移动端菜单按钮 -->
+          <div class="md:hidden">
+            <button
+              class="text-gray-700 hover:text-blue-600"
+              id="mobileMenuBtn"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <!-- 移动端菜单 -->
+        <div class="md:hidden hidden" id="mobileMenu">
+          <div
+            class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-100"
+          >
+            <a
+              href="#"
+              class="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
+              >首页</a
+            >
+            <a
+              href="#features"
+              class="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
+              >技术特色</a
+            >
+            <a
+              href="#chat"
+              class="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
+              >AI导师</a
+            >
+            <a
+              href="#about"
+              class="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium"
+              >关于我们</a
+            >
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Banner 区域 -->
+    <section class="pt-16 pb-20 gradient-bg relative overflow-hidden">
+      <div class="absolute inset-0 bg-black/10"></div>
+
+      <!-- 数学公式构建动画 -->
+      <div class="formula-builder">
+        <div class="formula-element" style="left: 10%; animation-delay: 0s">
+          f(x) = x²
+        </div>
+        <div class="formula-element" style="left: 25%; animation-delay: 2s">
+          ∫ f(x)dx
+        </div>
+        <div class="formula-element" style="left: 40%; animation-delay: 4s">
+          y = mx + b
+        </div>
+        <div class="formula-element" style="left: 55%; animation-delay: 1s">
+          sin²θ + cos²θ = 1
+        </div>
+        <div class="formula-element" style="left: 70%; animation-delay: 3s">
+          lim(x→∞)
+        </div>
+        <div class="formula-element" style="left: 85%; animation-delay: 5s">
+          a² + b² = c²
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center py-20">
+          <div class="floating-animation mb-8">
+            <div
+              class="w-20 h-20 mx-auto bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center mb-6"
+            >
+              <svg
+                class="w-12 h-12 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
+              </svg>
+            </div>
+          </div>
+          <h1
+            class="text-5xl md:text-7xl font-display text-white mb-8 leading-tight tracking-wider"
+          >
+            <span
+              class="block font-light text-4xl md:text-5xl mb-4 font-accent text-yellow-300 tracking-wider"
+              >拾 级 而 上</span
+            >
+            <span
+              class="bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 bg-clip-text text-transparent font-black tracking-wider"
+              >自 适 而 学</span
+            >
+          </h1>
+          <p
+            class="text-xl md:text-2xl text-white/90 mb-6 max-w-4xl mx-auto leading-relaxed font-bold tracking-wide"
+          >
+            融合<span class="text-gradient-kg font-mono font-bold text-3xl"
+              >知识图谱技术</span
+            >与<span class="text-gradient-aimodel font-mono font-bold text-3xl"
+              >AI大模型</span
+            >的<br class="hidden md:block" />
+            智能数学学习推荐系统
+          </p>
+          <p
+            class="text-lg md:text-xl text-white/80 mb-12 max-w-3xl mx-auto leading-loose font-bold tracking-wider"
+          >
+            为每位学习者<span
+              class="font-accent text-3xl text-yellow-300 font-bold tracking-wider"
+              >量身定制</span
+            >最优学习方案，让数学学习更加<span
+              class="font-semibold text-green-300 text-3xl font-bold tracking-wider"
+              >智能化</span
+            >和<span
+              class="font-semibold text-blue-300 text-3xl font-bold tracking-wider"
+              >个性化</span
+            >
+          </p>
+          <div
+            class="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
+            <button
+              onclick="scrollToChat()"
+              class="btn-primary bg-white text-blue-600 px-8 py-4 rounded-full font-brand font-bold text-lg hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-xl tracking-wide"
+            >
+              立即体验智能推荐
+            </button>
+            <a
+              href="#features"
+              class="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition-all duration-300 tracking-wide"
+            >
+              点击了解技术特色
+            </a>
+          </div>
+
+          <!-- 技术标签展示 -->
+          <div class="mt-12 flex flex-wrap justify-center gap-4">
+            <div class="tech-badge tech-badge-kg text-base px-6 py-3">
+              <svg
+                class="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                ></path>
+              </svg>
+              知识图谱建模
+            </div>
+            <div class="tech-badge tech-badge-aimodel text-base px-6 py-3">
+              <svg
+                class="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                ></path>
+              </svg>
+              AI智能引擎
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 装饰性元素 -->
+      <div
+        class="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"
+      ></div>
+      <div
+        class="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"
+      ></div>
+    </section>
+
+    <!-- 三栏式内容区 -->
+    <section id="features" class="py-20 bg-white relative">
+      <!-- 知识网络背景 -->
+      <div class="knowledge-network">
+        <!-- 知识节点 -->
+        <div class="network-node" style="top: 20%; left: 15%"></div>
+        <div class="network-node" style="top: 30%; left: 45%"></div>
+        <div class="network-node" style="top: 60%; left: 25%"></div>
+        <div class="network-node" style="top: 70%; left: 65%"></div>
+        <div class="network-node" style="top: 40%; left: 75%"></div>
+
+        <!-- 连接线 -->
+        <div
+          class="network-connection"
+          style="top: 25%; left: 15%; width: 300px; transform: rotate(15deg)"
+        ></div>
+        <div
+          class="network-connection"
+          style="top: 45%; left: 25%; width: 200px; transform: rotate(-20deg)"
+        ></div>
+        <div
+          class="network-connection"
+          style="top: 65%; left: 45%; width: 250px; transform: rotate(25deg)"
+        ></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-16 scroll-reveal">
+          <h2 class="text-4xl md:text-5xl font-heading text-gray-900 mb-4">
+            核心技术<span class="text-gradient">特色</span>
+          </h2>
+          <p
+            class="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto font-light leading-relaxed"
+          >
+            创新融合<span class="text-gradient-kg font-mono font-bold"
+              >知识图谱技术</span
+            >与<span class="text-gradient-aimodel font-mono font-bold"
+              >AI大模型</span
+            >，<br class="hidden md:block" />
+            构建智能化、个性化的数学学习生态系统
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- 特色卡片1 - 知识图谱 -->
+          <div
+            class="card-hover bg-white rounded-3xl p-8 shadow-lg border border-gray-100 scroll-reveal"
+          >
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mb-6"
+            >
+              <svg
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-heading text-gray-900 mb-4 tracking-tight">
+              <span class="text-gradient-kg">知识图谱</span>驱动规划
+            </h3>
+            <p class="text-gray-600 leading-relaxed mb-6 font-light">
+              构建<span class="font-mono font-semibold text-green-600"
+                >结构化数学知识图谱</span
+              >，智能分析知识点间的依赖关系，为学习者规划最优的<span
+                class="font-accent text-lg"
+                >学习路径</span
+              >。
+            </p>
+
+            <!-- 知识图谱网络结构动画 -->
+            <div class="knowledge-graph mb-4">
+              <!-- 连接线网络 - 先绘制连接线，再绘制节点在上层 -->
+              <!-- 中心节点(120,60)到主要节点的连接 -->
+              <div
+                class="kg-connection"
+                style="
+                  top: 59px;
+                  left: 120px;
+                  width: 47px;
+                  transform: rotate(-35deg);
+                "
+              ></div>
+              <!-- 到(158,33) -->
+              <div
+                class="kg-connection"
+                style="
+                  top: 59px;
+                  left: 120px;
+                  width: 67px;
+                  transform: rotate(160deg);
+                "
+              ></div>
+              <!-- 到(58,83) -->
+              <div
+                class="kg-connection"
+                style="
+                  top: 59px;
+                  left: 120px;
+                  width: 63px;
+                  transform: rotate(25deg);
+                "
+              ></div>
+              <!-- 到(178,88) -->
+
+              <!-- 主要节点到次要节点的连接 -->
+              <div
+                class="kg-connection"
+                style="
+                  top: 32px;
+                  left: 158px;
+                  width: 40px;
+                  transform: rotate(-18deg);
+                "
+              ></div>
+              <!-- (158,33)到(196,21) -->
+              <div
+                class="kg-connection"
+                style="
+                  top: 87px;
+                  left: 178px;
+                  width: 32px;
+                  transform: rotate(25deg);
+                "
+              ></div>
+              <!-- (178,88)到(206,101) -->
+              <div
+                class="kg-connection"
+                style="
+                  top: 87px;
+                  left: 178px;
+                  width: 82px;
+                  transform: rotate(168deg);
+                "
+              ></div>
+              <!-- (178,88)到(96,106) -->
+
+              <!-- 交叉连接 -->
+              <div
+                class="kg-connection"
+                style="
+                  top: 27px;
+                  left: 88px;
+                  width: 70px;
+                  transform: rotate(4deg);
+                "
+              ></div>
+              <!-- (88,28)到(158,33) -->
+
+              <!-- 中心核心节点 -->
+              <div
+                class="kg-node center"
+                style="top: 50px; left: 110px; animation-delay: 0s"
+              ></div>
+
+              <!-- 主要节点层 -->
+              <div
+                class="kg-node major"
+                style="top: 20px; left: 80px; animation-delay: 0.5s"
+              ></div>
+              <div
+                class="kg-node major"
+                style="top: 25px; left: 150px; animation-delay: 1s"
+              ></div>
+              <div
+                class="kg-node major"
+                style="top: 75px; left: 50px; animation-delay: 1.5s"
+              ></div>
+              <div
+                class="kg-node major"
+                style="top: 80px; left: 170px; animation-delay: 2s"
+              ></div>
+
+              <!-- 次要节点层 -->
+              <div
+                class="kg-node minor"
+                style="top: 15px; left: 190px; animation-delay: 1.3s"
+              ></div>
+              <div
+                class="kg-node minor"
+                style="top: 95px; left: 200px; animation-delay: 2.3s"
+              ></div>
+              <div
+                class="kg-node minor"
+                style="top: 100px; left: 90px; animation-delay: 2.8s"
+              ></div>
+            </div>
+
+            <ul class="space-y-2 text-sm text-gray-500">
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-green-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                知识关联分析
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-green-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                智能路径推荐
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-green-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                前置知识检测
+              </li>
+            </ul>
+          </div>
+
+          <!-- 特色卡片2 - AI大模型 -->
+          <div
+            class="card-hover bg-white rounded-3xl p-8 shadow-lg border border-gray-100 scroll-reveal"
+          >
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6"
+            >
+              <svg
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-heading text-gray-900 mb-4 tracking-tight">
+              <span class="text-gradient-aimodel">AI智能</span>对话引擎
+            </h3>
+            <p class="text-gray-600 leading-relaxed mb-6 font-light">
+              深度集成的<span class="font-mono font-semibold text-orange-600"
+                >AI大语言模型引擎</span
+              >，专注数学领域深度优化，提供专业的问答、解题指导和<span
+                class="font-accent text-lg"
+                >学习建议</span
+              >。
+            </p>
+
+            <!-- AI思维过程动画 -->
+            <div class="deepseek-thinking mb-4">
+              <div class="thinking-layer">理解问题...</div>
+              <div class="thinking-layer">分析方法...</div>
+              <div class="thinking-layer">推理求解...</div>
+              <div class="thinking-layer">生成答案...</div>
+            </div>
+
+            <ul class="space-y-2 text-sm text-gray-500">
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-orange-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                专业数学推理
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-orange-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                自然语言交互
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-orange-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                24/7智能服务
+              </li>
+            </ul>
+          </div>
+
+          <!-- 特色卡片3 - 智能分析 -->
+          <div
+            class="card-hover bg-white rounded-3xl p-8 shadow-lg border border-gray-100 scroll-reveal"
+          >
+            <div
+              class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-6"
+            >
+              <svg
+                class="w-8 h-8 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-heading text-gray-900 mb-4 tracking-tight">
+              智能<span class="font-accent text-purple-600">学习</span>分析
+            </h3>
+            <p class="text-gray-600 leading-relaxed mb-6 font-light">
+              融合两大技术优势，深度分析学习行为和知识掌握情况，提供<span
+                class="font-mono font-semibold text-purple-600"
+                >精准化</span
+              >学习建议和进度报告。
+            </p>
+
+            <!-- 数据可视化图表 -->
+            <div class="chart-visualization mb-4">
+              <div class="chart-bar"></div>
+              <div class="chart-bar"></div>
+              <div class="chart-bar"></div>
+              <div class="chart-bar"></div>
+              <div class="chart-bar"></div>
+            </div>
+
+            <ul class="space-y-2 text-sm text-gray-500">
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-purple-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                多维度数据分析
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-purple-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                个性化推荐
+              </li>
+              <li class="flex items-center">
+                <svg
+                  class="w-4 h-4 text-purple-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                学习效果追踪
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI导师体验区域 -->
+    <section id="chat" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12 scroll-reveal">
+          <h2 class="text-4xl md:text-5xl font-heading text-gray-900 mb-4">
+            与<span
+              class="text-gradient-aimodel font-accent text-5xl md:text-6xl"
+              >AI智能导师</span
+            >对话
+          </h2>
+          <p
+            class="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto font-light leading-relaxed"
+          >
+            体验深度集成的<span
+              class="text-gradient-aimodel font-mono font-bold"
+              >AI大模型引擎</span
+            >，<br class="hidden md:block" />
+            结合<span class="text-gradient-kg font-mono font-bold"
+              >知识图谱</span
+            >获得最专业的数学学习指导
+          </p>
+        </div>
+
+        <!-- AI导师聊天界面容器 - 添加相对定位以便侧边栏定位 -->
+        <div class="relative" id="chatContainerWrapper">
+          <!-- AI导师内嵌聊天界面 -->
+          <div
+            class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
+            id="chatContainer"
+          >
+            <!-- 顶部栏 -->
+            <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-6">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div
+                    class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center"
+                  >
+                    <svg
+                      class="w-7 h-7 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3
+                      class="text-white font-brand font-bold tracking-wide text-lg"
+                    >
+                      AI智能数学导师
+                    </h3>
+                    <p class="text-white/80 text-sm font-light">
+                      知识图谱 • AI引擎 • 智能推荐
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                  <div
+                    class="tech-badge tech-badge-kg text-white bg-white/20 border-white/30"
+                  >
+                    知识图谱
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <div
+                      class="w-3 h-3 bg-green-400 rounded-full animate-pulse"
+                    ></div>
+                    <span class="text-white/80 text-sm">AI在线</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 内嵌聊天框 -->
+            <div class="relative bg-gray-50" style="height: 700px">
+              <iframe
+                src="http://172.20.192.249:4535/chatbot/xrSk9ne45Mej6Cyy"
+                style="width: 100%; height: 100%; min-height: 700px"
+                frameborder="0"
+                allow="microphone"
+              >
+              </iframe>
+            </div>
+          </div>
+
+          <!-- 侧边栏跳转按钮 -->
+          <div id="chatSidebar" class="chat-sidebar">
+            <button
+              id="sidebarJumpBtn"
+              class="sidebar-jump-btn pulse-animation"
+              onclick="redirectToLearning()"
+            >
+              <svg
+                class="w-7 h-7"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                ></path>
+              </svg>
+            </button>
+            <div class="sidebar-label">开始<br />学习</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 统计数据区域 -->
+    <section class="py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8 text-center">
+          <div class="scroll-reveal flex flex-col items-center justify-end">
+            <div class="progress-circle mb-4">
+              <svg>
+                <defs>
+                  <linearGradient
+                    id="progressGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
+                  >
+                    <stop
+                      offset="0%"
+                      style="stop-color: #3b82f6; stop-opacity: 1"
+                    />
+                    <stop
+                      offset="100%"
+                      style="stop-color: #8b5cf6; stop-opacity: 1"
+                    />
+                  </linearGradient>
+                </defs>
+                <circle class="progress-bg" cx="60" cy="60" r="45"></circle>
+                <circle class="progress-bar" cx="60" cy="60" r="45"></circle>
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-2xl font-bold text-blue-600">10K+</span>
+              </div>
+            </div>
+            <p class="text-gray-600 font-brand font-medium">知识图谱节点</p>
+          </div>
+          <div class="scroll-reveal flex flex-col items-center justify-end">
+            <div class="text-4xl md:text-5xl font-display text-green-600 mb-2">
+              1000+
+            </div>
+            <p class="text-gray-600 font-brand font-medium">累计服务人数</p>
+          </div>
+          <div class="scroll-reveal flex flex-col items-center justify-end">
+            <div class="text-4xl md:text-5xl font-display text-orange-600 mb-2">
+              AI引擎
+            </div>
+            <p class="text-gray-600 font-brand font-medium">驱动推理</p>
+          </div>
+          <div class="scroll-reveal flex flex-col items-center justify-end">
+            <div class="text-4xl md:text-5xl font-display text-purple-600 mb-2">
+              24/7
+            </div>
+            <p class="text-gray-600 font-brand font-medium">智能服务</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页脚信息 -->
+    <footer id="about" class="bg-gray-900 text-white py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8">
+          <div class="col-span-2">
+            <div class="flex items-center space-x-3 mb-6">
+              <div
+                class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center"
+              >
+                <svg
+                  class="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  ></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-brand font-bold tracking-wide">
+                  拾级而上，自适而学
+                </h3>
+                <p class="text-gray-400 text-sm font-light tracking-wide">
+                  知识图谱驱动的智能推荐系统
+                </p>
+              </div>
+            </div>
+            <p class="text-gray-400 leading-relaxed mb-6 font-light">
+              融合<span class="text-gradient-kg font-mono font-medium"
+                >知识图谱技术</span
+              >与<span class="text-gradient-aimodel font-mono font-medium"
+                >AI智能引擎</span
+              >，<br />
+              构建革命性的数学学习体验。通过技术创新与教育理念的深度结合，<br />
+              我们致力于释放每个人<span class="font-semibold text-yellow-400"
+                >无限的学习潜能</span
+              >。
+            </p>
+            <div class="flex space-x-4">
+              <a
+                href="#"
+                class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="#"
+                class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-lg font-brand font-semibold mb-4 tracking-wide">
+              核心技术
+            </h4>
+            <ul class="space-y-2 text-gray-400 font-light">
+              <li><span class="text-gradient-kg">知识图谱建模</span></li>
+              <li><span class="text-gradient-aimodel">AI智能引擎</span></li>
+              <li>
+                <button
+                  onclick="scrollToChat()"
+                  class="text-left hover:text-white transition-colors"
+                >
+                  智能对话系统
+                </button>
+              </li>
+              <li>
+                <a href="#" class="hover:text-white transition-colors"
+                  >个性化推荐</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-lg font-brand font-semibold mb-4 tracking-wide">
+              联系我们
+            </h4>
+            <ul class="space-y-2 text-gray-400 font-light">
+              <li>
+                <span class="font-mono text-sm">邮箱：</span
+                >info@mathlearning.com
+              </li>
+              <li><span class="font-mono text-sm">电话：</span>400-123-4567</li>
+              <li><span class="font-mono text-sm">地址：</span>浙江省湖州市</li>
+              <li>
+                <span class="font-mono text-sm">工作时间：</span>9:00-18:00
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div
+          class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400"
+        >
+          <p class="font-light tracking-wide">
+            &copy; 2025
+            <span class="font-brand font-medium">拾级而上，自适而学</span> -
+            知识图谱驱动的智能数学学习系统. 保留所有权利。
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- 回到顶部按钮 -->
+    <a href="#" class="back-to-top" id="backToTop" title="回到顶部">
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M5 10l7-7m0 0l7 7m-7-7v18"
+        ></path>
+      </svg>
+    </a>
+
+    <!-- 学习路径跳转弹窗 -->
+    <div id="pathRedirectModal" class="path-redirect-modal">
+      <div class="path-redirect-content">
+        <span class="path-redirect-icon">🎯</span>
+        <div class="path-redirect-title">学习路径已生成</div>
+        <div class="path-redirect-message">
+          系统已为您生成专属的学习路径！<br />
+          现在跳转到学习页面开始您的个性化学习之旅吧！
+        </div>
+        <div class="path-redirect-buttons">
+          <button
+            id="confirmRedirectBtn"
+            class="path-redirect-btn btn-redirect-confirm"
+          >
+            立即开始学习
+          </button>
+          <button
+            id="cancelRedirectBtn"
+            class="path-redirect-btn btn-redirect-cancel"
+          >
+            稍后再说
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新增：知识检测弹窗 -->
+    <div id="knowledgeTestModal" class="knowledge-test-modal">
+      <div class="knowledge-test-content">
+        <span class="knowledge-test-icon">🧠</span>
+        <div class="knowledge-test-title">题目已准备就绪</div>
+        <div class="knowledge-test-message">
+          AI导师已为您精心准备了个性化测试题目！<br />
+          现在可以开始进行知识点检测，系统将据此为您制定最适合的学习方案。
+        </div>
+        <div class="knowledge-test-buttons">
+          <button
+            id="confirmTestBtn"
+            class="knowledge-test-btn btn-test-confirm"
+          >
+            开始知识检测
+          </button>
+          <button id="cancelTestBtn" class="knowledge-test-btn btn-test-cancel">
+            稍后进行
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let path_id;
+      let receivedRoomId = null; // 存储接收到的roomId
+
+      // 前端WebSocket连接代码
+      try {
+        const ws = new WebSocket("ws://172.20.192.249:3000");
+
+        ws.onopen = function (event) {
+          console.log("WebSocket连接已建立");
+        };
+
+        ws.onmessage = function (event) {
+          console.log("收到消息:", event.data);
+
+          try {
+            const data = JSON.parse(event.data);
+            console.log("解析后的数据:", data);
+
+            // 检查是否是path_id类型的消息
+            if (data.type === "path_id" && data.roomId) {
+              console.log("检测到学习路径消息，roomId:", data.roomId);
+              receivedRoomId = data.roomId;
+              showPathRedirectModal();
+            }
+
+            // 新增：检查是否是question类型的消息
+            if (data.type === "begin_questions") {
+              console.log("检测到知识检测消息");
+              showKnowledgeTestModal();
+            }
+          } catch (error) {
+            console.error("解析WebSocket消息时出错:", error);
+          }
+        };
+
+        ws.onclose = function (event) {
+          console.log("WebSocket连接已关闭");
+        };
+
+        ws.onerror = function (error) {
+          console.error("WebSocket错误:", error);
+        };
+      } catch (error) {
+        console.error("创建WebSocket连接时出错:", error);
+      }
+
+      // 显示学习路径跳转弹窗
+      function showPathRedirectModal() {
+        const modal = document.getElementById("pathRedirectModal");
+        modal.classList.add("active");
+      }
+
+      // 隐藏学习路径跳转弹窗
+      function hidePathRedirectModal() {
+        const modal = document.getElementById("pathRedirectModal");
+        modal.classList.remove("active");
+      }
+
+      // 新增：显示知识检测弹窗
+      function showKnowledgeTestModal() {
+        const modal = document.getElementById("knowledgeTestModal");
+        modal.classList.add("active");
+      }
+
+      // 新增：隐藏知识检测弹窗
+      function hideKnowledgeTestModal() {
+        const modal = document.getElementById("knowledgeTestModal");
+        modal.classList.remove("active");
+      }
+
+      // 显示侧边栏跳转按钮
+      function showSidebarJumpButton() {
+        const sidebar = document.getElementById("chatSidebar");
+        sidebar.classList.add("visible");
+
+        // 显示通知
+        showNotification(
+          "学习路径已准备就绪！点击右侧按钮即可开始学习",
+          "success"
+        );
+      }
+
+      // 隐藏侧边栏跳转按钮
+      function hideSidebarJumpButton() {
+        const sidebar = document.getElementById("chatSidebar");
+        sidebar.classList.remove("visible");
+      }
+
+      // 跳转到学习页面
+      function redirectToLearning() {
+        if (receivedRoomId) {
+          const learningUrl = `http://127.0.0.1:5500/answer.html?roomId=${receivedRoomId}`;
+          console.log("跳转到学习页面:", learningUrl);
+          window.open(learningUrl, "_blank");
+          hidePathRedirectModal();
+          // 跳转后可以选择隐藏侧边栏按钮，或保留让用户可以重新打开
+          // hideSidebarJumpButton();
+        } else {
+          console.error("没有接收到roomId");
+          alert("错误：无法获取学习路径ID");
+        }
+      }
+
+      // 新增：跳转到知识检测页面
+      function redirectToKnowledgeTest() {
+        const testUrl = "http://127.0.0.1:5500/cognitive_diagnosis.html";
+        console.log("跳转到知识检测页面:", testUrl);
+        window.open(testUrl, "_blank");
+        hideKnowledgeTestModal();
+      }
+
+      // 弹窗事件监听
+      document.addEventListener("DOMContentLoaded", function () {
+        // 学习路径弹窗事件
+        const confirmBtn = document.getElementById("confirmRedirectBtn");
+        const cancelBtn = document.getElementById("cancelRedirectBtn");
+        const pathModal = document.getElementById("pathRedirectModal");
+
+        // 确认跳转按钮
+        confirmBtn.addEventListener("click", redirectToLearning);
+
+        // 取消按钮 - 修改逻辑：显示侧边栏按钮
+        cancelBtn.addEventListener("click", function () {
+          hidePathRedirectModal();
+          showSidebarJumpButton(); // 显示侧边栏跳转按钮
+        });
+
+        // 点击弹窗外部关闭
+        pathModal.addEventListener("click", function (e) {
+          if (e.target === pathModal) {
+            hidePathRedirectModal();
+            showSidebarJumpButton(); // 显示侧边栏跳转按钮
+          }
+        });
+
+        // 新增：知识检测弹窗事件
+        const confirmTestBtn = document.getElementById("confirmTestBtn");
+        const cancelTestBtn = document.getElementById("cancelTestBtn");
+        const testModal = document.getElementById("knowledgeTestModal");
+
+        // 确认检测按钮
+        confirmTestBtn.addEventListener("click", redirectToKnowledgeTest);
+
+        // 取消按钮
+        cancelTestBtn.addEventListener("click", hideKnowledgeTestModal);
+
+        // // 点击弹窗外部关闭
+        // testModal.addEventListener("click", function (e) {
+        //   if (e.target === testModal) {
+        //     hideKnowledgeTestModal();
+        //   }
+        // });
+
+        // ESC键关闭所有弹窗
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") {
+            if (pathModal.classList.contains("active")) {
+              hidePathRedirectModal();
+              showSidebarJumpButton();
+            }
+            if (testModal.classList.contains("active")) {
+              hideKnowledgeTestModal();
+            }
+          }
+        });
+      });
+
+      // 滚动到聊天区域
+      function scrollToChat() {
+        const chatSection = document.getElementById("chat");
+        if (chatSection) {
+          chatSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+          // 添加高亮效果
+          setTimeout(() => {
+            const chatContainer = document.getElementById("chatContainer");
+            if (chatContainer) {
+              chatContainer.classList.add("chat-highlight");
+              setTimeout(() => {
+                chatContainer.classList.remove("chat-highlight");
+              }, 2000);
+            }
+          }, 800);
+        }
+      }
+
+      // 显示通知
+      function showNotification(message, type = "info") {
+        const notification = document.createElement("div");
+        const bgColor =
+          type === "success"
+            ? "bg-green-500"
+            : type === "warning"
+            ? "bg-orange-500"
+            : "bg-blue-500";
+
+        notification.className = `fixed top-20 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-0 transition-transform duration-300 max-w-sm`;
+        notification.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 flex-shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.style.transform = "translateX(100%)";
+            setTimeout(() => {
+              if (notification.parentNode) {
+                document.body.removeChild(notification);
+              }
+            }, 300);
+          }
+        }, 5000);
+      }
+
+      // 创建数学公式动画
+      function createFormulaElement() {
+        const formulas = [
+          "f(x) = x²",
+          "∫ f(x)dx",
+          "y = mx + b",
+          "sin²θ + cos²θ = 1",
+          "lim(x→∞)",
+          "a² + b² = c²",
+          "e^(iπ) + 1 = 0",
+          "∑(n=1→∞)",
+          "dy/dx",
+          "log(xy) = log(x) + log(y)",
+          "|z| = √(x² + y²)",
+          "∇f = grad(f)",
+          "∂f/∂x",
+          "det(A)",
+          "rank(A)",
+        ];
+        const formulaContainer = document.querySelector(".formula-builder");
+
+        if (formulaContainer) {
+          setInterval(() => {
+            const element = document.createElement("div");
+            element.className = "formula-element";
+            element.textContent =
+              formulas[Math.floor(Math.random() * formulas.length)];
+            element.style.left = Math.random() * 90 + "%";
+            element.style.animationDelay = Math.random() * 2 + "s";
+            element.style.fontSize = Math.random() * 8 + 16 + "px";
+
+            formulaContainer.appendChild(element);
+
+            setTimeout(() => {
+              if (element.parentNode) {
+                formulaContainer.removeChild(element);
+              }
+            }, 12000);
+          }, 2000);
+        }
+      }
+
+      // 滚动动画
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll(".scroll-reveal").forEach((el) => {
+        observer.observe(el);
+      });
+
+      // 平滑滚动
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        });
+      });
+
+      // 移动端菜单
+      const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
+
+      mobileMenuBtn?.addEventListener("click", () => {
+        mobileMenu?.classList.toggle("hidden");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (
+          !mobileMenuBtn?.contains(e.target) &&
+          !mobileMenu?.contains(e.target)
+        ) {
+          mobileMenu?.classList.add("hidden");
+        }
+      });
+
+      // 回到顶部按钮控制
+      const backToTopBtn = document.getElementById("backToTop");
+
+      window.addEventListener("scroll", () => {
+        if (window.pageYOffset > 300) {
+          backToTopBtn.classList.add("visible");
+        } else {
+          backToTopBtn.classList.remove("visible");
+        }
+      });
+
+      backToTopBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      });
+
+      // 监听跳转到聊天区域的链接
+      document.querySelectorAll('a[href="#chat"]').forEach((link) => {
+        link.addEventListener("click", (e) => {
+          setTimeout(() => {
+            const chatContainer = document.getElementById("chatContainer");
+            if (chatContainer) {
+              chatContainer.classList.add("chat-highlight");
+              setTimeout(() => {
+                chatContainer.classList.remove("chat-highlight");
+              }, 2000);
+            }
+          }, 800);
+        });
+      });
+
+      // 页面加载完成后初始化
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("知识图谱+AI智能引擎数学学习系统初始化完成");
+
+        setTimeout(() => {
+          document.querySelectorAll(".floating-animation").forEach((el) => {
+            el.style.animationPlayState = "running";
+          });
+        }, 500);
+
+        createFormulaElement();
+      });
+
+      // 全局函数
+      window.scrollToChat = scrollToChat;
+      window.redirectToLearning = redirectToLearning;
+      window.redirectToKnowledgeTest = redirectToKnowledgeTest;
+    </script>
+  </body>
+</html>

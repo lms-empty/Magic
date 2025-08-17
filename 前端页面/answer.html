@@ -1,0 +1,2973 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>拾级而上，自适而学 - 智能学习系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3B82F6",
+              secondary: "#10B981",
+              accent: "#8B5CF6",
+              deepseek: "#6366F1",
+              aimodel: "#F97316",
+              knowledge: "#4ADE80",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="sidebar">
+      <h2 class="font-display text-gradient">知识点列表</h2>
+      <div id="tabs"></div>
+    </div>
+
+    <div id="content">
+      <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+      </div>
+      <!-- 修改内容区域 tab 切换 - 学习资源在前 -->
+      <div class="content-tabs">
+        <div class="content-tab active" data-tab="resource">学习资源</div>
+        <div class="content-tab" data-tab="question">题目练习</div>
+      </div>
+      <div id="question-header">
+        <div id="question-number" class="font-heading"></div>
+        <div class="header-right">
+          <div id="timer-container">
+            <span class="timer-icon">⏱</span>
+            <span id="timer">0秒</span>
+          </div>
+          <!-- 修改：更换资源按钮，添加文字描述 -->
+          <button
+            id="change-resource-btn"
+            class="change-resource-btn"
+            style="display: none"
+            title="更换学习资源"
+          >
+            <span class="btn-icon">🔄</span>
+            <span class="btn-text">更换资源</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 学习资源面板 - 默认激活 -->
+      <div id="resource-panel" class="content-panel active">
+        <div id="resource-container" class="resource-content">
+          <!-- 资源头部 -->
+          <div class="resource-header">
+            <div class="decoration-stars">
+              <span class="star">✨</span>
+              <span class="star">⭐</span>
+              <span class="star">💫</span>
+              <span class="star">🌟</span>
+            </div>
+            <h3 id="resource-title">知识点学习资源</h3>
+          </div>
+
+          <!-- 现代化学习小助手 -->
+          <div class="learning-assistant">
+            <div class="assistant-container">
+              <div class="assistant-halo"></div>
+              <div class="assistant-body">
+                <div class="assistant-eyes">
+                  <div class="eye"></div>
+                  <div class="eye"></div>
+                </div>
+                <div class="assistant-mouth"></div>
+                <div class="assistant-blush left"></div>
+                <div class="assistant-blush right"></div>
+              </div>
+            </div>
+            <div class="magic-particles">
+              <div class="particle"></div>
+              <div class="particle"></div>
+              <div class="particle"></div>
+              <div class="particle"></div>
+            </div>
+          </div>
+
+          <!-- 资源内容区域 -->
+          <div id="resource-content">
+            <!-- 资源内容将在这里动态生成 -->
+          </div>
+
+          <!-- 开始练习按钮 -->
+          <button id="start-practice-btn" class="blue-btn">
+            <span class="btn-icon">🎯</span> 开始题目练习
+          </button>
+        </div>
+      </div>
+
+      <!-- 题目练习面板 -->
+      <div id="question-panel" class="content-panel">
+        <div id="question-container" class="font-mono">
+          <div class="question-type-badge">选择题</div>
+          <div id="question-text"></div>
+        </div>
+
+        <div id="answer-container">
+          <!-- 选项或判断选择将在这里动态生成 -->
+        </div>
+
+        <div id="feedback"></div>
+      </div>
+
+      <div class="button-group">
+        <button id="hint-btn" class="blue-btn">
+          <span class="btn-icon">💡</span> 查看提示
+        </button>
+        <!-- 新增：全部完成后的检测按钮 -->
+        <button id="prev-btn" class="blue-btn">
+          <span class="btn-icon">◀</span> 上一题
+        </button>
+        <button id="next-btn" class="blue-btn">
+          <span class="btn-icon">▶</span> 下一题
+        </button>
+        <button id="submit-btn" class="blue-btn">
+          <span class="btn-icon">✓</span> 提交本模块
+        </button>
+        <button id="view-report-btn" class="blue-btn">
+          <span class="btn-icon">📊</span> 查看做题情况
+        </button>
+        <button id="complete-check-btn" class="blue-btn" style="display: none">
+          <span class="btn-icon">🎓</span>
+          学习任务都完成啦，来检测下你对这个知识点的掌握情况吧～
+        </button>
+      </div>
+
+      <!-- 报告模态框 -->
+      <div id="report-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <span class="font-display text-gradient">做题情况报告</span>
+            <span class="close-modal">&times;</span>
+          </div>
+          <div id="report-container"></div>
+        </div>
+      </div>
+
+      <!-- 更换学习资源询问弹窗 - 修改为资源类型选择 -->
+      <div id="resource-change-modal" class="resource-change-modal">
+        <div class="resource-change-content">
+          <span class="resource-change-icon">🎯</span>
+          <div class="resource-change-title">选择学习资源类型</div>
+          <div class="resource-change-message">
+            检测发现您在当前知识点的掌握情况为"<span
+              id="mastery-status-text"
+              class="mastery-status-highlight"
+              >未掌握</span
+            >"。<br />
+            请选择您希望学习的资源类型，系统将为您推荐更适合的学习资源：
+          </div>
+
+          <!-- 资源类型选择区域 -->
+          <div class="resource-type-selection">
+            <div class="resource-type-option" data-type="视频资源">
+              <div class="resource-type-icon video-icon">🎥</div>
+              <div class="resource-type-name">视频课程</div>
+              <div class="resource-type-desc">直观生动的视频讲解</div>
+            </div>
+
+            <div class="resource-type-option" data-type="论文资源">
+              <div class="resource-type-icon paper-icon">📄</div>
+              <div class="resource-type-name">学术论文</div>
+              <div class="resource-type-desc">深入的理论研究资料</div>
+            </div>
+
+            <div class="resource-type-option" data-type="课件资源">
+              <div class="resource-type-icon courseware-icon">📊</div>
+              <div class="resource-type-name">教学课件</div>
+              <div class="resource-type-desc">结构化的知识展示</div>
+            </div>
+
+            <div class="resource-type-option" data-type="练习资源">
+              <div class="resource-type-icon exercise-icon">📝</div>
+              <div class="resource-type-name">习题练习</div>
+              <div class="resource-type-desc">针对性的练习题目</div>
+            </div>
+          </div>
+
+          <div class="resource-change-buttons">
+            <button
+              id="confirm-resource-type-btn"
+              class="resource-change-btn btn-confirm"
+              disabled
+            >
+              确认选择
+            </button>
+            <button
+              id="cancel-change-btn"
+              class="resource-change-btn btn-cancel"
+            >
+              暂不更换
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 学习路径更换询问弹窗 -->
+      <div id="path-change-modal" class="path-change-modal">
+        <div class="path-change-content">
+          <span class="path-change-icon">🔄</span>
+          <div class="path-change-title">学习路径调整建议</div>
+          <div class="path-change-message">
+            检测到您在当前知识点已学习<span class="path-change-highlight"
+              >超过3次</span
+            >，<br />
+            但仍然未能很好掌握相关内容。<br />
+            <br />
+            系统建议为您调整后续的学习路径，<br />
+            采用更适合您学习风格的内容安排和教学方式。
+          </div>
+          <div class="path-change-buttons">
+            <button
+              id="confirm-path-change-btn"
+              class="path-change-btn btn-path-confirm"
+            >
+              是，调整学习路径
+            </button>
+            <button
+              id="cancel-path-change-btn"
+              class="path-change-btn btn-path-cancel"
+            >
+              继续当前路径
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 新增：路径选择确认弹窗 -->
+      <div id="path-selection-modal" class="path-selection-modal">
+        <div class="path-selection-content">
+          <span class="path-selection-icon">🎯</span>
+          <div class="path-selection-title">智能学习路径推荐</div>
+          <div class="path-selection-message">
+            基于您的学习情况，系统为您推荐了新的学习路径：
+          </div>
+
+          <!-- 路径展示区域 -->
+          <div id="path-display" class="path-display">
+            <!-- 路径内容将在这里动态生成 -->
+          </div>
+
+          <div class="path-selection-buttons">
+            <button
+              id="confirm-new-path-btn"
+              class="path-selection-btn btn-path-accept"
+            >
+              采用新路径
+            </button>
+            <button
+              id="reject-new-path-btn"
+              class="path-selection-btn btn-path-reject"
+            >
+              继续当前路径
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 新增：返回主页提示弹窗 -->
+      <div id="return-home-modal" class="return-home-modal">
+        <div class="return-home-content">
+          <span class="return-home-icon">🏠</span>
+          <div class="return-home-title">学习路径建议</div>
+          <div class="return-home-message">
+            看来当前的学习路径可能不太适合您的学习风格。<br />
+            建议您返回主页，在对话框中详细描述您的学习需求，<br />
+            让系统为您重新规划更合适的学习路径。
+          </div>
+          <div class="return-home-buttons">
+            <button id="go-home-btn" class="return-home-btn btn-home-confirm">
+              返回主页重新规划
+            </button>
+            <button
+              id="stay-current-btn"
+              class="return-home-btn btn-home-cancel"
+            >
+              继续当前学习
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 新增：学习完成提醒弹窗 -->
+      <div id="completion-reminder-modal" class="completion-reminder-modal">
+        <div class="completion-reminder-content">
+          <span class="completion-reminder-icon">🎓</span>
+          <div class="completion-reminder-title">学习任务完成！</div>
+          <div class="completion-reminder-message">
+            恭喜您完成了本次学习！<br />
+            但我们注意到您在以下知识点的学习过程中需要多次练习才掌握：
+          </div>
+
+          <!-- 重复学习知识点列表 -->
+          <div id="repeated-knowledge-list" class="repeated-knowledge-list">
+            <!-- 动态生成重复学习的知识点 -->
+          </div>
+
+          <div class="completion-reminder-suggestion">
+            建议您在后续学习中多加练习这些知识点，<br />
+            或者寻找更多相关的练习题目来巩固掌握。
+          </div>
+
+          <div class="completion-reminder-buttons">
+            <button
+              id="understand-reminder-btn"
+              class="completion-reminder-btn btn-understand"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 心情面板 -->
+    <div id="mood-panel" class="mood-panel">
+      <div class="mood-panel-header">
+        <span class="mood-panel-title">你现在感觉如何？</span>
+        <button id="toggle-mood-panel" class="toggle-mood-panel">
+          <span class="toggle-icon">◀</span>
+        </button>
+      </div>
+      <div class="mood-options">
+        <label class="mood-option" data-mood="沮丧">
+          <input type="checkbox" value="沮丧" />
+          <div class="mood-content">
+            <span class="mood-emoji">😞</span>
+            <span class="mood-label">沮丧</span>
+          </div>
+        </label>
+        <label class="mood-option" data-mood="困惑">
+          <input type="checkbox" value="困惑" />
+          <div class="mood-content">
+            <span class="mood-emoji">😕</span>
+            <span class="mood-label">困惑</span>
+          </div>
+        </label>
+        <label class="mood-option" data-mood="专注">
+          <input type="checkbox" value="专注" checked />
+          <div class="mood-content">
+            <span class="mood-emoji">😎</span>
+            <span class="mood-label">专注</span>
+          </div>
+        </label>
+        <label class="mood-option" data-mood="无聊">
+          <input type="checkbox" value="无聊" />
+          <div class="mood-content">
+            <span class="mood-emoji">🥱</span>
+            <span class="mood-label">无聊</span>
+          </div>
+        </label>
+      </div>
+      <div class="mood-auto-indicator">
+        <span>🧠 自动检测中...</span>
+      </div>
+    </div>
+
+    <div id="mood-float-btn" class="mood-float-btn">
+      <span class="mood-emoji">😊</span>
+      <span class="mood-text">心情</span>
+    </div>
+
+    <script>
+      // 新增：从URL参数获取roomId的函数
+      function getRoomIdFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get("roomId");
+      }
+
+      // 新增：获取pathId，优先使用URL参数中的roomId，否则使用默认值
+      function getPathId() {
+        const roomId = getRoomIdFromURL();
+        if (roomId) {
+          console.log("从URL获取到roomId:", roomId);
+          return roomId;
+        } else {
+          console.log("未从URL获取到roomId，使用默认值: 212");
+          return "212";
+        }
+      }
+
+      // 使用动态获取的pathId
+      const pathId = getPathId();
+      console.log("当前使用的pathId:", pathId);
+
+      const apiUrl = `http://172.20.192.249:3000/api/learning-paths/${pathId}/questions_and_resources`;
+      const apiUrlUser = `http://172.20.192.249:3000/api/get-user-id/${pathId}`;
+      const changeResourceUrl = `http://172.20.192.249:3000/api/learning-paths/${pathId}/change-resource-and-question`;
+      // 新增：学习路径更换API接口
+      const changePathUrl = `http://172.20.192.249:3000/api/learning-paths/${pathId}/change-learning-path`;
+      // 新增：确认路径更换API接口
+      const confirmPathUrl = `http://172.20.192.249:3000/api/learning-paths/${pathId}/confirm-path-change`;
+
+      const tabsEl = document.getElementById("tabs");
+      const questionContainer = document.getElementById("question-container");
+      const questionText = document.getElementById("question-text");
+      const questionNumberEl = document.getElementById("question-number");
+      const answerContainer = document.getElementById("answer-container");
+      const feedbackEl = document.getElementById("feedback");
+      const timerContainer = document.getElementById("timer-container");
+      const timerEl = document.getElementById("timer");
+      const progressBar = document.getElementById("progress-bar");
+
+      const prevBtn = document.getElementById("prev-btn");
+      const nextBtn = document.getElementById("next-btn");
+      const submitBtn = document.getElementById("submit-btn");
+      const viewReportBtn = document.getElementById("view-report-btn");
+      const hintBtn = document.getElementById("hint-btn");
+      const startPracticeBtn = document.getElementById("start-practice-btn");
+      // 新增：更换资源按钮
+      const changeResourceBtn = document.getElementById("change-resource-btn");
+      // 新增：完成检测按钮
+      const completeCheckBtn = document.getElementById("complete-check-btn");
+
+      // 获取报告模态框元素
+      const reportModal = document.getElementById("report-modal");
+      const reportContainer = document.getElementById("report-container");
+      const closeModal = document.querySelector(".close-modal");
+
+      // 获取更换资源弹窗元素
+      const resourceChangeModal = document.getElementById(
+        "resource-change-modal"
+      );
+      const confirmResourceTypeBtn = document.getElementById(
+        "confirm-resource-type-btn"
+      );
+      const cancelChangeBtn = document.getElementById("cancel-change-btn");
+      const masteryStatusText = document.getElementById("mastery-status-text");
+
+      // 获取学习路径更换弹窗元素
+      const pathChangeModal = document.getElementById("path-change-modal");
+      const confirmPathChangeBtn = document.getElementById(
+        "confirm-path-change-btn"
+      );
+      const cancelPathChangeBtn = document.getElementById(
+        "cancel-path-change-btn"
+      );
+
+      // 新增：获取路径选择弹窗元素
+      const pathSelectionModal = document.getElementById(
+        "path-selection-modal"
+      );
+      const pathDisplay = document.getElementById("path-display");
+      const confirmNewPathBtn = document.getElementById("confirm-new-path-btn");
+      const rejectNewPathBtn = document.getElementById("reject-new-path-btn");
+
+      // 新增：获取返回主页弹窗元素
+      const returnHomeModal = document.getElementById("return-home-modal");
+      const goHomeBtn = document.getElementById("go-home-btn");
+      const stayCurrentBtn = document.getElementById("stay-current-btn");
+
+      // 新增：获取学习完成提醒弹窗元素
+      const completionReminderModal = document.getElementById(
+        "completion-reminder-modal"
+      );
+      const repeatedKnowledgeList = document.getElementById(
+        "repeated-knowledge-list"
+      );
+      const understandReminderBtn = document.getElementById(
+        "understand-reminder-btn"
+      );
+
+      // 全局状态管理
+      let submittedTabs = {};
+      let unlockedTabs = {};
+      let hintCounts = {};
+      let rawData = [];
+      let knowledgePoints = {};
+      let keys = [];
+      let currentTab = null;
+      let currentIndex = 0;
+      let currentTabIndex = 0;
+      let timerInterval = null;
+      let userAnswers = {};
+      let tabReports = {}; // 存储每个标签页的报告数据
+      let user_id = 0;
+      let selectedResourceType = null; // 用户选择的资源类型
+      let pathChangeData = null; // 存储路径更换数据
+      let isFromPathRejection = false; // 标记是否来自路径拒绝
+
+      // 新增：全局状态标记
+      let hasShownCompletionReminder = false; // 是否已显示过完成提醒弹窗
+      let isAllTasksCompleted = false; // 是否全部任务已完成
+
+      // 在全局变量区域添加心情面板相关变量
+      let moodPanelHidden = false;
+      let moodAutoUpdateEnabled = true;
+      let moodPanelDragged = false;
+      let moodPanelDragOffset = { x: 0, y: 0 };
+
+      // 在 DOMContentLoaded 事件中添加心情面板事件处理
+      // 在 DOMContentLoaded 事件中添加心情面板事件处理
+      document.addEventListener("DOMContentLoaded", function () {
+        // 心情面板切换按钮事件
+        const toggleMoodPanelBtn = document.getElementById("toggle-mood-panel");
+        const moodPanel = document.getElementById("mood-panel");
+        const moodFloatBtn = document.getElementById("mood-float-btn");
+        const toggleIcon = toggleMoodPanelBtn.querySelector(".toggle-icon");
+
+        // 初始化状态
+        let moodPanelHidden = false;
+        moodFloatBtn.style.display = "none";
+        toggleMoodPanelBtn.addEventListener("click", function () {
+          moodPanelHidden = !moodPanelHidden;
+
+          if (moodPanelHidden) {
+            moodPanel.classList.add("hidden");
+            moodFloatBtn.style.display = "flex";
+            toggleIcon.textContent = "▶";
+            toggleIcon.style.transform = "rotate(180deg)";
+          } else {
+            moodPanel.classList.remove("hidden");
+            moodFloatBtn.style.display = "none";
+            toggleIcon.textContent = "◀";
+            toggleIcon.style.transform = "rotate(0deg)";
+          }
+        });
+
+        // 悬浮按钮事件
+        moodFloatBtn.addEventListener("click", function () {
+          moodPanelHidden = false;
+          moodPanel.classList.remove("hidden");
+          moodFloatBtn.style.display = "none";
+          toggleIcon.textContent = "◀";
+          toggleIcon.style.transform = "rotate(0deg)";
+        });
+
+        // 心情选项点击反馈
+        const moodOptions = document.querySelectorAll(".mood-option");
+        moodOptions.forEach((option) => {
+          option.addEventListener("click", function (e) {
+            // 防止事件冒泡
+            if (e.target.tagName === "INPUT") return;
+
+            const checkbox = this.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+
+            // 触发change事件
+            checkbox.dispatchEvent(new Event("change"));
+          });
+        });
+      });
+
+      // 心情面板拖拽开始
+      function startMoodPanelDrag(e) {
+        if (e.target.closest(".toggle-btn") || e.target.closest("input"))
+          return;
+
+        moodPanelDragged = true;
+        const moodPanel = document.getElementById("mood-panel");
+        const rect = moodPanel.getBoundingClientRect();
+
+        moodPanelDragOffset = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        };
+
+        document.addEventListener("mousemove", dragMoodPanel);
+        document.addEventListener("mouseup", stopMoodPanelDrag);
+      }
+
+      // 悬浮按钮拖拽开始
+      function startMoodFloatBtnDrag(e) {
+        moodPanelDragged = true;
+        const moodFloatBtn = document.getElementById("mood-float-btn");
+        const rect = moodFloatBtn.getBoundingClientRect();
+
+        moodPanelDragOffset = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        };
+
+        document.addEventListener("mousemove", dragMoodFloatBtn);
+        document.addEventListener("mouseup", stopMoodFloatBtnDrag);
+      }
+
+      // 拖拽心情面板
+      function dragMoodPanel(e) {
+        if (!moodPanelDragged) return;
+
+        const moodPanel = document.getElementById("mood-panel");
+        moodPanel.style.right = "auto";
+        moodPanel.style.left = e.clientX - moodPanelDragOffset.x + "px";
+        moodPanel.style.top = e.clientY - moodPanelDragOffset.y + "px";
+      }
+
+      // 停止拖拽心情面板
+      function stopMoodPanelDrag() {
+        moodPanelDragged = false;
+        document.removeEventListener("mousemove", dragMoodPanel);
+        document.removeEventListener("mouseup", stopMoodPanelDrag);
+      }
+
+      // 拖拽悬浮按钮
+      function dragMoodFloatBtn(e) {
+        if (!moodPanelDragged) return;
+
+        const moodFloatBtn = document.getElementById("mood-float-btn");
+        moodFloatBtn.style.right = "auto";
+        moodFloatBtn.style.left = e.clientX - moodPanelDragOffset.x + "px";
+        moodFloatBtn.style.top = e.clientY - moodPanelDragOffset.y + "px";
+      }
+
+      // 停止拖拽悬浮按钮
+      function stopMoodFloatBtnDrag() {
+        moodPanelDragged = false;
+        document.removeEventListener("mousemove", dragMoodFloatBtn);
+        document.removeEventListener("mouseup", stopMoodFloatBtnDrag);
+      }
+
+      // 在全局状态管理区域添加心情相关变量
+      let userMoods = {}; // 存储用户心情状态
+      // 新增：完成检测按钮点击事件
+      completeCheckBtn.onclick = () => {
+        // 跳转到认知诊断页面
+
+        window.location.href = "http://127.0.0.1:5500/cognitive_diagnosis.html";
+      };
+
+      // 查看提示功能 - 修改为支持系统提醒模式
+      hintBtn.onclick = () => {
+        // 如果按钮已经切换为"查看系统提醒"模式，直接显示系统提醒
+        if (hintBtn.classList.contains("system-reminder-mode")) {
+          // 重新显示完成提醒弹窗y
+          showCompletionReminderModal();
+          return;
+        }
+
+        // 原有的查看提示功能需要检查知识点状态
+        if (!currentTab || submittedTabs[currentTab]) return;
+
+        // 原有的查看提示功能
+        hintCounts[currentTab][currentIndex] =
+          (hintCounts[currentTab][currentIndex] || 0) + 1;
+        feedbackEl.textContent =
+          "💡 提示：请注意题目中的关键词，认真分析解题思路！";
+        feedbackEl.className = "success-feedback";
+
+        setTimeout(() => {
+          feedbackEl.textContent = "";
+          feedbackEl.className = "";
+        }, 4000);
+      };
+
+      // 开始练习按钮事件
+      startPracticeBtn.onclick = () => {
+        // 切换到题目练习面板
+        document.querySelector('.content-tab[data-tab="question"]').click();
+      };
+
+      // 新增：更换资源按钮事件
+      changeResourceBtn.onclick = () => {
+        showResourceChangeModal();
+      };
+
+      // 更换学习资源相关函数 - 修改为接受掌握状态参数
+      function showResourceChangeModal(masteryStatus = "未掌握") {
+        console.log("显示更换资源弹窗，掌握状态:", masteryStatus); // 调试信息
+        selectedResourceType = null; // 重置选择
+
+        // 更新掌握状态显示
+        masteryStatusText.textContent = masteryStatus;
+
+        // 重置所有选项的选中状态
+        document.querySelectorAll(".resource-type-option").forEach((option) => {
+          option.classList.remove("selected");
+        });
+
+        // 禁用确认按钮
+        confirmResourceTypeBtn.disabled = true;
+        confirmResourceTypeBtn.classList.add("disabled");
+
+        resourceChangeModal.style.display = "flex";
+        resourceChangeModal.style.visibility = "visible";
+        resourceChangeModal.style.opacity = "1";
+        // 强制触发重新渲染
+        resourceChangeModal.offsetHeight;
+      }
+
+      function hideResourceChangeModal() {
+        console.log("隐藏更换资源弹窗"); // 调试信息
+        resourceChangeModal.style.display = "none";
+        resourceChangeModal.style.visibility = "hidden";
+        resourceChangeModal.style.opacity = "0";
+        selectedResourceType = null;
+      }
+
+      // 新增：显示更换资源按钮
+      function showChangeResourceButton() {
+        console.log("显示更换资源按钮");
+        changeResourceBtn.style.display = "flex";
+      }
+
+      // 新增：隐藏更换资源按钮
+      function hideChangeResourceButton() {
+        console.log("隐藏更换资源按钮");
+        changeResourceBtn.style.display = "none";
+      }
+
+      // 资源类型选择事件处理
+      document.addEventListener("DOMContentLoaded", function () {
+        const resourceTypeOptions = document.querySelectorAll(
+          ".resource-type-option"
+        );
+
+        resourceTypeOptions.forEach((option) => {
+          option.addEventListener("click", function () {
+            // 移除其他选项的选中状态
+            resourceTypeOptions.forEach((opt) =>
+              opt.classList.remove("selected")
+            );
+
+            // 选中当前选项
+            this.classList.add("selected");
+
+            // 保存选择的资源类型
+            selectedResourceType = this.getAttribute("data-type");
+
+            // 启用确认按钮
+            confirmResourceTypeBtn.disabled = false;
+            confirmResourceTypeBtn.classList.remove("disabled");
+
+            console.log("选择的资源类型:", selectedResourceType);
+          });
+        });
+      });
+
+      // 学习路径更换相关函数
+      function showPathChangeModal() {
+        console.log("显示学习路径更换弹窗"); // 调试信息
+        pathChangeModal.style.display = "flex";
+        pathChangeModal.style.visibility = "visible";
+        pathChangeModal.style.opacity = "1";
+        // 强制触发重新渲染
+        pathChangeModal.offsetHeight;
+      }
+
+      function hidePathChangeModal() {
+        console.log("隐藏学习路径更换弹窗"); // 调试信息
+        pathChangeModal.style.display = "none";
+        pathChangeModal.style.visibility = "hidden";
+        pathChangeModal.style.opacity = "0";
+      }
+
+      // 修复路径选择弹窗相关函数 - 主要修复点
+      function showPathSelectionModal(pathData) {
+        console.log("显示路径选择弹窗，数据:", pathData); // 调试信息
+        pathChangeData = pathData; // 保存路径数据
+
+        // 首先隐藏所有其他弹窗
+        hidePathChangeModal();
+        hideResourceChangeModal();
+        hideReturnHomeModal();
+        hideCompletionReminderModal();
+
+        // 生成路径展示内容
+        const finalPlan = pathData.python_output?.final_plan || [];
+        console.log("路径计划:", finalPlan); // 调试信息
+
+        let pathHtml = '<div class="path-list">';
+
+        if (finalPlan.length > 0) {
+          finalPlan.forEach((item, index) => {
+            pathHtml += `
+              <div class="path-item">
+                <div class="path-number">${index + 1}</div>
+                <div class="path-content">${item}</div>
+              </div>
+            `;
+          });
+        } else {
+          pathHtml +=
+            '<div class="path-item"><div class="path-content">暂无具体路径规划</div></div>';
+        }
+
+        pathHtml += "</div>";
+        pathDisplay.innerHTML = pathHtml;
+
+        // 关键修复：使用正确的显示方法
+        console.log("准备显示路径选择弹窗");
+
+        // 确保元素完全隐藏状态，然后再显示
+        pathSelectionModal.style.display = "none";
+        pathSelectionModal.style.visibility = "hidden";
+        pathSelectionModal.style.opacity = "0";
+
+        // 使用 requestAnimationFrame 确保样式更新完成后再显示
+        requestAnimationFrame(() => {
+          pathSelectionModal.style.display = "flex";
+          pathSelectionModal.style.visibility = "visible";
+          pathSelectionModal.style.opacity = "1";
+          pathSelectionModal.style.zIndex = "2000"; // 设置更高的z-index确保显示在最上层
+
+          // 强制触发重新渲染
+          pathSelectionModal.offsetHeight;
+
+          console.log("路径选择弹窗显示状态:", {
+            display: pathSelectionModal.style.display,
+            visibility: pathSelectionModal.style.visibility,
+            opacity: pathSelectionModal.style.opacity,
+            zIndex: pathSelectionModal.style.zIndex,
+          });
+        });
+      }
+
+      function hidePathSelectionModal() {
+        console.log("隐藏路径选择弹窗"); // 调试信息
+        pathSelectionModal.style.display = "none";
+        pathSelectionModal.style.visibility = "hidden";
+        pathSelectionModal.style.opacity = "0";
+        pathSelectionModal.style.zIndex = "1500"; // 恢复原始z-index
+        pathChangeData = null;
+      }
+
+      // 新增：返回主页弹窗相关函数
+      function showReturnHomeModal() {
+        console.log("显示返回主页弹窗"); // 调试信息
+        // 确保隐藏其他弹窗
+        hidePathSelectionModal();
+        hidePathChangeModal();
+        hideResourceChangeModal();
+        hideCompletionReminderModal();
+
+        setTimeout(() => {
+          returnHomeModal.style.display = "flex";
+          returnHomeModal.style.visibility = "visible";
+          returnHomeModal.style.opacity = "1";
+          returnHomeModal.offsetHeight;
+        }, 100);
+      }
+
+      function hideReturnHomeModal() {
+        console.log("隐藏返回主页弹窗"); // 调试信息
+        returnHomeModal.style.display = "none";
+        returnHomeModal.style.visibility = "hidden";
+        returnHomeModal.style.opacity = "0";
+      }
+
+      // 新增：学习完成提醒弹窗相关函数
+      function showCompletionReminderModal() {
+        console.log("显示学习完成提醒弹窗");
+
+        // 获取所有重复学习超过3次的知识点
+        const repeatedKnowledgePoints = getRepeatedKnowledgePoints();
+
+        if (repeatedKnowledgePoints.length === 0) {
+          console.log("没有重复学习的知识点，不显示提醒");
+          return;
+        }
+
+        // 确保隐藏其他弹窗
+        hidePathSelectionModal();
+        hidePathChangeModal();
+        hideResourceChangeModal();
+        hideReturnHomeModal();
+
+        // 立即标记已显示过完成提醒，并更新按钮状态
+        hasShownCompletionReminder = true;
+        updateHintButtonState();
+
+        // 生成重复学习知识点列表
+        let listHtml = '<div class="repeated-knowledge-items">';
+        repeatedKnowledgePoints.forEach((item, index) => {
+          listHtml += `
+            <div class="repeated-knowledge-item">
+              <span class="knowledge-name">${item.knowledgePoint}</span>
+              <span class="learning-count">学习${item.learningCount}次后掌握</span>
+            </div>
+          `;
+        });
+        listHtml += "</div>";
+
+        repeatedKnowledgeList.innerHTML = listHtml;
+
+        setTimeout(() => {
+          completionReminderModal.style.display = "flex";
+          completionReminderModal.style.visibility = "visible";
+          completionReminderModal.style.opacity = "1";
+          completionReminderModal.offsetHeight;
+        }, 100);
+      }
+
+      function hideCompletionReminderModal() {
+        console.log("隐藏学习完成提醒弹窗");
+        completionReminderModal.style.display = "none";
+        completionReminderModal.style.visibility = "hidden";
+        completionReminderModal.style.opacity = "0";
+      }
+
+      // 新增：获取重复学习超过3次的知识点
+      function getRepeatedKnowledgePoints() {
+        const repeatedPoints = [];
+
+        Object.keys(tabReports).forEach((knowledgePoint) => {
+          const report = tabReports[knowledgePoint];
+          if (
+            report &&
+            report.learningCount > 3 &&
+            report.masteryResult !== "未掌握"
+          ) {
+            repeatedPoints.push({
+              knowledgePoint: knowledgePoint,
+              learningCount: report.learningCount,
+            });
+          }
+        });
+
+        return repeatedPoints;
+      }
+
+      // 新增：检查是否所有知识点都已完成
+      function checkAllKnowledgePointsCompleted() {
+        const completedCount = Object.keys(submittedTabs).filter(
+          (key) => submittedTabs[key]
+        ).length;
+        const totalCount = keys.length;
+
+        console.log(`已完成知识点: ${completedCount}/${totalCount}`);
+
+        if (completedCount === totalCount && totalCount > 0) {
+          // 标记全部任务已完成
+          isAllTasksCompleted = true;
+
+          // 显示完成检测按钮
+          updateCompleteCheckButtonVisibility();
+
+          // 延迟显示完成提醒，让用户先看到提交成功的反馈
+          setTimeout(() => {
+            showCompletionReminderModal();
+          }, 3000);
+        }
+      }
+
+      // 新增：更新完成检测按钮的显示状态
+      function updateCompleteCheckButtonVisibility() {
+        if (isAllTasksCompleted) {
+          completeCheckBtn.style.display = "inline-flex";
+        } else {
+          completeCheckBtn.style.display = "none";
+        }
+      }
+
+      // 新增：更新查看提示按钮状态
+      function updateHintButtonState() {
+        if (hasShownCompletionReminder) {
+          // 切换为系统提醒模式
+          hintBtn.innerHTML = '<span class="btn-icon">🔔</span> 查看系统提醒';
+          hintBtn.classList.add("system-reminder-mode");
+          hintBtn.title = "查看系统学习提醒";
+          hintBtn.disabled = false; // 系统提醒模式下始终可用
+        } else {
+          // 保持原有的查看提示模式
+          hintBtn.innerHTML = '<span class="btn-icon">💡</span> 查看提示';
+          hintBtn.classList.remove("system-reminder-mode");
+          hintBtn.title = "查看答题提示";
+          // 普通提示模式下的disabled状态在updateButtonStates中处理
+        }
+      }
+
+      // 更换学习资源API调用 - 修改为包含资源类型
+      async function changeResourceAPI(knowledgePoint, resourceType) {
+        console.log(currentTabIndex);
+
+        try {
+          const response = await fetch(changeResourceUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: rawData[currentTabIndex].id,
+              path_id: pathId,
+              user_id: user_id,
+              knowledge_point: knowledgePoint,
+              resource_type: resourceType, // 新增资源类型参数
+              reason: `用户选择${resourceType}类型的学习资源，以提高学习效果`,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log("更换资源成功:", result);
+          return { success: true, data: result };
+        } catch (error) {
+          console.error("更换资源失败:", error);
+          return { success: false, error: error.message };
+        }
+      }
+
+      // 更换学习路径API调用 - 修改为处理新的返回格式
+      async function changePathAPI(knowledgePoint, learningCount) {
+        console.log("调用学习路径更换API:", {
+          knowledgePoint,
+          learningCount,
+          currentTabIndex,
+        });
+
+        try {
+          const response = await fetch(changePathUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: rawData[currentTabIndex].id,
+              skill_id: rawData[currentTabIndex].skill_id,
+              path_id: pathId,
+              user_id: user_id,
+              knowledge_point: knowledgePoint,
+              learning_count: learningCount,
+              current_performance: "多次学习未掌握",
+              reason: `学习次数已达${learningCount}次，建议调整学习路径以提高学习效果`,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log("更换学习路径API返回:", result);
+          return { success: true, data: result };
+        } catch (error) {
+          console.error("更换学习路径失败:", error);
+          return { success: false, error: error.message };
+        }
+      }
+
+      // 新增：确认路径更换API调用
+      async function confirmPathChangeAPI(pythonOutput) {
+        console.log("调用确认路径更换API:", pythonOutput);
+
+        try {
+          const response = await fetch(confirmPathUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              path_id: pathId,
+              user_id: user_id,
+              python_output: pythonOutput,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log("确认路径更换成功:", result);
+          return { success: true, data: result };
+        } catch (error) {
+          console.error("确认路径更换失败:", error);
+          return { success: false, error: error.message };
+        }
+      }
+
+      // 修复重复知识点问题的更新学习路径函数
+      async function updateLearningPath() {
+        try {
+          console.log("开始更新学习路径数据，当前知识点:", currentTab);
+          console.log("更新前的原始keys:", [...keys]);
+
+          // 重新获取数据
+          const res = await fetch(apiUrl);
+          const newRawData = await res.json();
+          console.log("获取到新的原始数据:", newRawData);
+
+          // 解析新数据
+          const newKnowledgePoints = {};
+          newRawData.forEach((item) => {
+            const parsed = safeParseQuestions(item.questions);
+            Object.entries(parsed).forEach(([k, v]) => {
+              if (!newKnowledgePoints[k]) newKnowledgePoints[k] = [];
+              newKnowledgePoints[k].push(...v);
+            });
+          });
+
+          const newKeys = Object.keys(newKnowledgePoints);
+          console.log("解析到新的知识点:", newKeys);
+
+          // 找到当前知识点在原keys中的索引
+          const currentTabIndexInKeys = keys.indexOf(currentTab);
+          console.log("当前知识点在原keys中的索引:", currentTabIndexInKeys);
+
+          if (currentTabIndexInKeys === -1) {
+            console.log("当前知识点不存在于原keys中，直接替换所有数据");
+            // 如果当前知识点不存在，直接替换所有数据
+            rawData = newRawData;
+            knowledgePoints = newKnowledgePoints;
+            keys = newKeys;
+          } else {
+            console.log("保留当前知识点之前的数据，更新当前及之后的数据");
+
+            // 保留当前知识点之前的数据和状态（不包括当前知识点）
+            const preservedKeys = keys.slice(0, currentTabIndexInKeys);
+            console.log("需要保留的知识点（当前知识点之前）:", preservedKeys);
+
+            // 更新rawData
+            rawData = newRawData;
+
+            // 构建新的knowledgePoints，保留前面的，更新当前及后面的
+            const updatedKnowledgePoints = {};
+
+            // 1. 保留当前知识点之前的知识点数据
+            preservedKeys.forEach((key) => {
+              if (knowledgePoints[key]) {
+                updatedKnowledgePoints[key] = knowledgePoints[key];
+                console.log("保留知识点:", key);
+              }
+            });
+
+            // 2. 添加新的知识点数据（包括当前知识点及之后的所有知识点）
+            newKeys.forEach((key) => {
+              if (newKnowledgePoints[key]) {
+                updatedKnowledgePoints[key] = newKnowledgePoints[key];
+                console.log("更新/添加知识点:", key);
+              }
+            });
+
+            // 3. 构建最终的keys数组：保留的 + 新的所有知识点
+            // 关键修复：确保不会重复添加知识点
+            const finalKeys = [...preservedKeys];
+
+            // 添加新的知识点（避免重复）
+            newKeys.forEach((key) => {
+              if (!finalKeys.includes(key)) {
+                finalKeys.push(key);
+              }
+            });
+
+            // 更新全局变量
+            knowledgePoints = updatedKnowledgePoints;
+            keys = finalKeys;
+            console.log("最终的知识点列表:", keys);
+
+            // 对于当前知识点及之后的知识点，重新初始化数据结构
+            const currentAndAfterKeys = keys.slice(currentTabIndexInKeys);
+            console.log("需要重新初始化的知识点:", currentAndAfterKeys);
+
+            currentAndAfterKeys.forEach((key) => {
+              const keyIndex = keys.indexOf(key);
+
+              // 重置提交状态（只重置当前知识点之后的知识点，当前知识点保持原状态）
+              if (keyIndex > currentTabIndexInKeys) {
+                console.log("重置知识点提交状态:", key);
+                submittedTabs[key] = false;
+                delete tabReports[key];
+                // 不要自动解锁所有知识点，保持锁定状态
+                unlockedTabs[key] = false;
+              }
+
+              // 重新初始化用户答案数组和提示计数
+              if (knowledgePoints[key]) {
+                console.log("重新初始化知识点数据结构:", key);
+                userAnswers[key] = knowledgePoints[key].map(() => ({
+                  answer: null,
+                  accumulatedTime: 0,
+                  isTiming: false,
+                  lastStartTime: null,
+                }));
+
+                // 重新初始化提示计数
+                hintCounts[key] = knowledgePoints[key].map(() => 0);
+              }
+            });
+
+            // 修复解锁逻辑：根据已完成的知识点正确解锁下一个知识点
+            console.log("开始修复解锁逻辑");
+            for (let i = 0; i < keys.length; i++) {
+              const key = keys[i];
+
+              if (i === 0) {
+                // 第一个知识点始终解锁
+                unlockedTabs[key] = true;
+                console.log("解锁第一个知识点:", key);
+              } else {
+                const prevKey = keys[i - 1];
+                // 只有前一个知识点已提交时，才解锁当前知识点
+                if (submittedTabs[prevKey]) {
+                  unlockedTabs[key] = true;
+                  console.log(
+                    "解锁知识点:",
+                    key,
+                    "因为前一个知识点已完成:",
+                    prevKey
+                  );
+                } else {
+                  unlockedTabs[key] = false;
+                  console.log(
+                    "锁定知识点:",
+                    key,
+                    "因为前一个知识点未完成:",
+                    prevKey
+                  );
+                }
+              }
+            }
+          }
+
+          // 更新currentTabIndex以匹配新的keys数组
+          currentTabIndex = keys.indexOf(currentTab);
+          console.log("更新后的currentTabIndex:", currentTabIndex);
+
+          // 如果当前知识点发生了变化，需要重新加载
+          if (currentTab && knowledgePoints[currentTab]) {
+            console.log("重新加载当前知识点内容");
+            // 重置到第一题
+            currentIndex = 0;
+
+            // 重新加载资源内容和题目
+            loadResourceContent();
+            loadQuestion();
+
+            // 更新界面状态
+            updateButtonStates();
+            updateProgressBar();
+
+            // 清除任何反馈信息
+            feedbackEl.textContent = "";
+            feedbackEl.className = "";
+
+            // 确保答案容器不是禁用状态
+            answerContainer.className = "";
+
+            // 确保计时器状态正确
+            timerContainer.classList.remove("submitted");
+            if (!submittedTabs[currentTab]) {
+              startTiming();
+            }
+          }
+
+          // 重新构建标签页
+          buildTabs();
+          console.log("学习路径更新完成");
+
+          return true;
+        } catch (error) {
+          console.error("更新学习路径失败:", error);
+          return false;
+        }
+      }
+
+      // 刷新学习资源
+      async function refreshLearningResources() {
+        try {
+          // 重新获取数据
+          const res = await fetch(apiUrl);
+          const newRawData = await res.json();
+
+          // 更新全局数据
+          rawData = newRawData;
+
+          // 重新解析知识点数据
+          const newKnowledgePoints = {};
+          newRawData.forEach((item) => {
+            const parsed = safeParseQuestions(item.questions);
+            Object.entries(parsed).forEach(([k, v]) => {
+              if (!newKnowledgePoints[k]) newKnowledgePoints[k] = [];
+              newKnowledgePoints[k].push(...v);
+            });
+          });
+
+          // 修复BUG1：正确更新题目数据
+          knowledgePoints = newKnowledgePoints;
+          keys = Object.keys(knowledgePoints);
+
+          // 重新初始化当前知识点的数据结构
+          if (currentTab && knowledgePoints[currentTab]) {
+            // 关键修复：重置当前知识点的提交状态，因为题目已经更新
+            submittedTabs[currentTab] = false;
+
+            // 清除之前的报告数据
+            delete tabReports[currentTab];
+
+            // 重新初始化用户答案数组（清空所有答案，因为题目已更新）
+            const currentQuestions = knowledgePoints[currentTab];
+            userAnswers[currentTab] = currentQuestions.map(() => ({
+              answer: null,
+              accumulatedTime: 0,
+              isTiming: false,
+              lastStartTime: null,
+            }));
+
+            // 重新初始化提示计数
+            hintCounts[currentTab] = currentQuestions.map(() => 0);
+
+            // 重置到第一题
+            currentIndex = 0;
+          }
+
+          // 重新构建标签页
+          buildTabs();
+
+          // 重新加载当前知识点的资源内容和题目
+          if (currentTab) {
+            loadResourceContent();
+            loadQuestion();
+
+            // 确保界面状态正确更新
+            updateButtonStates();
+            updateProgressBar();
+
+            // 清除任何反馈信息
+            feedbackEl.textContent = "";
+            feedbackEl.className = "";
+
+            // 确保答案容器不是禁用状态
+            answerContainer.className = "";
+
+            // 确保计时器状态正确
+            timerContainer.classList.remove("submitted");
+            if (!submittedTabs[currentTab]) {
+              startTiming();
+            }
+          }
+
+          return true;
+        } catch (error) {
+          console.error("刷新学习资源失败:", error);
+          return false;
+        }
+      }
+
+      // 更换资源确认按钮事件 - 修改为使用选择的资源类型
+      confirmResourceTypeBtn.onclick = async () => {
+        console.log("确认更换资源按钮被点击"); // 调试信息
+
+        if (!selectedResourceType) {
+          alert("请先选择一种资源类型！");
+          return;
+        }
+
+        // 显示加载状态
+        confirmResourceTypeBtn.disabled = true;
+        confirmResourceTypeBtn.innerHTML =
+          '<span class="loading-spinner"></span> 处理中...';
+
+        try {
+          // 调用更换资源API，传入选择的资源类型
+          const changeResult = await changeResourceAPI(
+            currentTab,
+            selectedResourceType
+          );
+
+          if (changeResult.success) {
+            // 刷新学习资源
+            const refreshSuccess = await refreshLearningResources();
+
+            if (refreshSuccess) {
+              // 关闭弹窗
+              hideResourceChangeModal();
+
+              // 隐藏更换资源按钮（因为资源已经更换成功）
+              hideChangeResourceButton();
+
+              // 跳转到学习资源页面，让用户查看新资源
+              document
+                .querySelector('.content-tab[data-tab="resource"]')
+                .click();
+
+              // 显示成功提示
+              feedbackEl.textContent = `🎉 学习资源和题目已更新！请查看新的学习资源后开始练习。`;
+              feedbackEl.className = "success-feedback";
+
+              setTimeout(() => {
+                feedbackEl.textContent = "";
+                feedbackEl.className = "";
+              }, 5000);
+            } else {
+              // 刷新失败
+              feedbackEl.textContent = "❌ 资源更新失败，请稍后重试。";
+              feedbackEl.className = "error-feedback";
+
+              setTimeout(() => {
+                feedbackEl.textContent = "";
+                feedbackEl.className = "";
+              }, 3000);
+            }
+          } else {
+            // API调用失败
+            alert(`更换资源失败：${changeResult.error}`);
+          }
+        } catch (error) {
+          console.error("处理更换资源请求时出错:", error);
+          alert("处理请求时出现错误，请稍后重试。");
+        } finally {
+          // 恢复按钮状态
+          confirmResourceTypeBtn.disabled = false;
+          confirmResourceTypeBtn.innerHTML = "确认选择";
+        }
+      };
+
+      // 取消更换资源按钮事件 - 修改为显示更换资源按钮
+      cancelChangeBtn.onclick = () => {
+        console.log("取消更换资源按钮被点击"); // 调试信息
+        hideResourceChangeModal();
+
+        // 显示更换资源按钮，让用户可以再次选择更换资源
+        showChangeResourceButton();
+      };
+
+      // 学习路径更换确认按钮事件 - 修改为调用新API并处理返回结果
+      confirmPathChangeBtn.onclick = async () => {
+        console.log("确认更换学习路径按钮被点击"); // 调试信息
+
+        // 显示加载状态
+        confirmPathChangeBtn.disabled = true;
+        confirmPathChangeBtn.innerHTML =
+          '<span class="loading-spinner"></span> 处理中...';
+
+        try {
+          // 获取当前学习次数（假设从最近的提交结果获取）
+          const currentCount = tabReports[currentTab]?.learningCount || 4; // 默认为4次（超过3次）
+
+          // 调用更换学习路径API
+          const changeResult = await changePathAPI(currentTab, currentCount);
+
+          if (changeResult.success) {
+            // 关闭当前弹窗
+            hidePathChangeModal();
+
+            // 检查返回数据格式
+            const responseData = changeResult.data;
+            console.log("路径更换API返回的完整数据:", responseData);
+
+            // 稍作延时再显示路径选择弹窗，确保前一个弹窗完全关闭
+            setTimeout(() => {
+              if (
+                responseData.python_output &&
+                responseData.python_output.final_plan
+              ) {
+                console.log("准备显示路径选择弹窗");
+                showPathSelectionModal(responseData);
+              } else {
+                // 如果没有路径推荐，显示成功提示
+                feedbackEl.textContent =
+                  "🎉 学习路径调整成功！系统已为您制定了更适合的学习计划。";
+                feedbackEl.className = "success-feedback";
+
+                setTimeout(() => {
+                  feedbackEl.textContent = "";
+                  feedbackEl.className = "";
+                }, 3000);
+              }
+            }, 300); // 300ms延时确保弹窗切换顺畅
+          } else {
+            // API调用失败
+            alert(`学习路径调整失败：${changeResult.error}`);
+          }
+        } catch (error) {
+          console.error("处理学习路径调整请求时出错:", error);
+          alert("处理请求时出现错误，请稍后重试。");
+        } finally {
+          // 恢复按钮状态
+          confirmPathChangeBtn.disabled = false;
+          confirmPathChangeBtn.innerHTML = "是，调整学习路径";
+        }
+      };
+
+      // 取消更换学习路径按钮事件 - 修改为根据情况显示资源更换弹窗（传入掌握状态）
+      cancelPathChangeBtn.onclick = () => {
+        console.log("取消更换学习路径按钮被点击"); // 调试信息
+        hidePathChangeModal();
+
+        // 如果学习次数超过3次且用户拒绝更换路径，显示资源更换弹窗
+        const currentCount = tabReports[currentTab]?.learningCount || 0;
+        if (currentCount > 3) {
+          isFromPathRejection = true; // 标记来自路径拒绝
+          // 获取当前知识点的掌握状态，传入弹窗
+          const masteryStatus =
+            tabReports[currentTab]?.masteryResult || "未掌握";
+          setTimeout(() => {
+            showResourceChangeModal(masteryStatus);
+          }, 500);
+        }
+      };
+
+      // 新增：路径选择弹窗事件处理 - 修改为调用更新学习路径函数
+      confirmNewPathBtn.onclick = async () => {
+        console.log("确认采用新路径按钮被点击"); // 调试信息
+
+        if (!pathChangeData || !pathChangeData.python_output) {
+          alert("路径数据错误，请重试。");
+          return;
+        }
+
+        // 显示加载状态
+        confirmNewPathBtn.disabled = true;
+        confirmNewPathBtn.innerHTML =
+          '<span class="loading-spinner"></span> 处理中...';
+
+        try {
+          // 调用确认路径更换API
+          const confirmResult = await confirmPathChangeAPI(
+            pathChangeData.python_output
+          );
+
+          if (confirmResult.success) {
+            // 关闭弹窗
+            hidePathSelectionModal();
+
+            // 更新学习路径数据（只更新当前知识点及之后的知识点）
+            const updateSuccess = await updateLearningPath();
+
+            if (updateSuccess) {
+              // 显示成功提示
+              feedbackEl.textContent =
+                "🎉 新学习路径已启用！系统已更新后续学习内容，已完成的知识点状态保持不变。";
+              feedbackEl.className = "success-feedback";
+
+              // 切换到学习资源页面，让用户查看新内容
+              document
+                .querySelector('.content-tab[data-tab="resource"]')
+                .click();
+
+              setTimeout(() => {
+                feedbackEl.textContent = "";
+                feedbackEl.className = "";
+              }, 5000);
+            } else {
+              // 更新失败
+              feedbackEl.textContent = "❌ 学习路径更新失败，请稍后重试。";
+              feedbackEl.className = "error-feedback";
+
+              setTimeout(() => {
+                feedbackEl.textContent = "";
+                feedbackEl.className = "";
+              }, 3000);
+            }
+          } else {
+            // API调用失败
+            alert(`路径更换失败：${confirmResult.error}`);
+          }
+        } catch (error) {
+          console.error("处理路径确认请求时出错:", error);
+          alert("处理请求时出现错误，请稍后重试。");
+        } finally {
+          // 恢复按钮状态
+          confirmNewPathBtn.disabled = false;
+          confirmNewPathBtn.innerHTML = "采用新路径";
+        }
+      };
+
+      rejectNewPathBtn.onclick = () => {
+        console.log("拒绝新路径按钮被点击"); // 调试信息
+        hidePathSelectionModal();
+
+        // 显示返回主页提示弹窗
+        setTimeout(() => {
+          showReturnHomeModal();
+        }, 500);
+      };
+
+      // 新增：返回主页弹窗事件处理
+      goHomeBtn.onclick = () => {
+        console.log("返回主页按钮被点击"); // 调试信息
+
+        // 可以在这里添加返回主页的逻辑
+        // 例如：window.location.href = '/';
+        alert("即将返回主页，请在对话框中描述您的学习需求。");
+        window.location.href = "http://127.0.0.1:5500/AI_teacher.html";
+        hideReturnHomeModal();
+      };
+
+      stayCurrentBtn.onclick = () => {
+        console.log("继续当前学习按钮被点击"); // 调试信息
+        hideReturnHomeModal();
+
+        // 显示成功提示
+        feedbackEl.textContent = "📚 将继续当前学习路径，加油学习！";
+        feedbackEl.className = "success-feedback";
+
+        setTimeout(() => {
+          feedbackEl.textContent = "";
+          feedbackEl.className = "";
+        }, 3000);
+      };
+
+      // 新增：学习完成提醒确认按钮事件 - 修改为更新按钮状态
+      understandReminderBtn.onclick = () => {
+        console.log("我知道了按钮被点击");
+
+        // 标记已显示过完成提醒
+        hasShownCompletionReminder = true;
+
+        // 隐藏弹窗
+        hideCompletionReminderModal();
+
+        // 更新查看提示按钮状态
+        updateHintButtonState();
+      };
+
+      // 点击弹窗外部关闭
+      resourceChangeModal.onclick = (event) => {
+        if (event.target === resourceChangeModal) {
+          hideResourceChangeModal();
+        }
+      };
+
+      pathChangeModal.onclick = (event) => {
+        if (event.target === pathChangeModal) {
+          hidePathChangeModal();
+        }
+      };
+
+      pathSelectionModal.onclick = (event) => {
+        if (event.target === pathSelectionModal) {
+          hidePathSelectionModal();
+        }
+      };
+
+      returnHomeModal.onclick = (event) => {
+        if (event.target === returnHomeModal) {
+          hideReturnHomeModal();
+        }
+      };
+
+      completionReminderModal.onclick = (event) => {
+        if (event.target === completionReminderModal) {
+          hideCompletionReminderModal();
+        }
+      };
+
+      // 安全解析问题数据 - 针对新的数据格式
+      function safeParseQuestions(str) {
+        try {
+          const replaced = str.replace(/'/g, "");
+
+          const replaced3 = replaced
+            .replace(/\\\\([()])/g, "")
+            .replace(/\\\\/g, "");
+
+          const parsed = JSON.parse(replaced3);
+
+          // 处理新的数据格式
+          const result = {};
+          Object.entries(parsed).forEach(([knowledgePoint, questions]) => {
+            result[knowledgePoint] = questions.map((q) => ({
+              question: q.question_text,
+              type: q.question_type,
+              options: q.options
+                ? typeof q.options === "string"
+                  ? JSON.parse(q.options)
+                  : q.options
+                : {},
+              answer: q.answer,
+              explanation: q.explanation,
+              question_number: q.question_number,
+            }));
+          });
+
+          return result;
+        } catch (e) {
+          console.error("解析失败", e);
+          return {};
+        }
+      }
+
+      // 初始化页面
+      async function init() {
+        try {
+          // 显示加载状态
+          tabsEl.innerHTML =
+            '<div class="text-center p-4"><div class="loading-spinner mx-auto"></div><p class="mt-2 text-sm text-gray-500">正在加载题目...</p></div>';
+
+          const res = await fetch(apiUrl);
+          const res2 = await fetch(apiUrlUser);
+
+          id = await res2.json();
+
+          user_id = id[0].user_id;
+          console.log(user_id);
+
+          rawData = await res.json();
+          console.log(rawData);
+          rawData.forEach((item) => {
+            const parsed = safeParseQuestions(item.questions);
+            Object.entries(parsed).forEach(([k, v]) => {
+              if (!knowledgePoints[k]) knowledgePoints[k] = [];
+              knowledgePoints[k].push(...v);
+            });
+          });
+          keys = Object.keys(knowledgePoints);
+
+          // 默认解锁第一个知识点
+          if (keys.length > 0) {
+            unlockedTabs[keys[0]] = true;
+          }
+
+          buildTabs();
+          switchTab(keys[0]);
+        } catch (error) {
+          console.error("初始化失败:", error);
+          tabsEl.innerHTML =
+            '<div class="text-center p-4 text-red-500"><p>加载题目失败</p><p class="text-sm mt-1">请检查网络连接后重试</p></div>';
+        }
+      }
+
+      // 构建知识点标签 - 修改为支持重复学习标识
+      function buildTabs() {
+        tabsEl.innerHTML = "";
+        keys.forEach((key, index) => {
+          const tab = document.createElement("div");
+          tab.className = "tab";
+          tab.dataset.key = key;
+
+          const isSubmitted = submittedTabs[key];
+          const isUnlocked = unlockedTabs[key] || isSubmitted;
+          const isLocked = !isUnlocked;
+
+          const progress = getProgress(key);
+
+          // 检查是否是重复学习超过3次的知识点
+          const report = tabReports[key];
+          const isRepeatedLearning =
+            report &&
+            report.learningCount > 3 &&
+            report.masteryResult !== "未掌握";
+
+          let tabInnerHTML = `<span class="font-heading">${key}</span><span class="progress-text">${progress.done}/${progress.total}</span>`;
+
+          // 如果是重复学习的知识点，在知识点后面添加学习次数提示
+          if (isRepeatedLearning) {
+            tabInnerHTML = `<span class="font-heading">${key} <span class="learning-count-badge">学习${report.learningCount}次</span></span><span class="progress-text">${progress.done}/${progress.total}</span>`;
+          }
+
+          tab.innerHTML = tabInnerHTML;
+
+          if (isSubmitted) {
+            if (isRepeatedLearning) {
+              // 重复学习的知识点显示为黄色
+              tab.classList.add("repeated-learning");
+            } else {
+              // 正常掌握的知识点显示为绿色
+              tab.classList.add("submitted");
+            }
+          }
+
+          if (isLocked) {
+            tab.classList.add("locked");
+          } else {
+            tab.onclick = () => switchTab(key);
+          }
+
+          if (key === currentTab) {
+            tab.classList.add("active");
+          }
+
+          tabsEl.appendChild(tab);
+        });
+      }
+
+      // 获取当前知识点进度
+      // 替换 getProgress 函数
+      function getProgress(key) {
+        const total = knowledgePoints[key]?.length || 0;
+
+        // 如果已提交，则显示100%完成
+        if (submittedTabs[key]) {
+          return { done: total, total };
+        }
+
+        // 计算已完成的题目数量（无论什么题型，只要有答案就算完成）
+        const done = (userAnswers[key] || []).filter(
+          (a) => a.answer !== null && a.answer !== undefined && a.answer !== ""
+        ).length;
+
+        return { done, total };
+      }
+
+      // 实时保存答案（不处理计时）
+      // 实时保存答案（不处理计时）
+      function saveCurrentAnswerInstant() {
+        if (!currentTab || !userAnswers[currentTab]?.[currentIndex]) return;
+
+        // 检查题目类型
+        const q = knowledgePoints[currentTab][currentIndex];
+
+        if (q.type === "简答题" || q.type === "证明题") {
+          // 简答题的答案已经在 handleShortAnswerInput 中保存
+          return;
+        }
+
+        // 对于选择题和判断题
+        const selectedOption = answerContainer.querySelector(
+          ".option-item.selected"
+        );
+        if (selectedOption) {
+          const answer = selectedOption.dataset.value;
+          const userData = userAnswers[currentTab][currentIndex];
+          userData.answer = answer;
+          updateButtonStates(); // 更新按钮状态
+          buildTabs(); // 更新标签页进度显示
+          updateProgressBar(); // 更新进度条
+        }
+      }
+
+      // 切换知识点
+      function switchTab(key) {
+        // 保存当前答案和计时状态
+        saveCurrentAnswer();
+        stopCurrentTiming();
+
+        // 初始化新知识点的数据
+        initializeTabData(key);
+
+        currentTab = key;
+        currentIndex = 0;
+        currentTabIndex = keys.indexOf(key);
+        // 重置心情自动更新状态
+        moodAutoUpdateEnabled = true;
+        document.querySelector(".mood-auto-indicator span").textContent =
+          "自动检测中...";
+
+        buildTabs();
+        loadQuestion();
+
+        // 切换知识点时，默认显示学习资源面板并正确设置UI状态
+        switchToResourcePanel();
+
+        // 切换知识点时隐藏更换资源按钮（每个知识点都是独立的）
+        hideChangeResourceButton();
+      }
+
+      // 切换到资源面板
+      function switchToResourcePanel() {
+        const buttonGroup = document.querySelector(".button-group");
+        const timerContainer = document.getElementById("timer-container");
+        const questionHeader = document.getElementById("question-header");
+        const progressBarContainer = document.getElementById(
+          "progress-bar-container"
+        );
+
+        // 停止计时
+        stopCurrentTiming();
+
+        // 更新tab状态
+        document
+          .querySelector('.content-tab[data-tab="resource"]')
+          .classList.add("active");
+        document
+          .querySelector('.content-tab[data-tab="question"]')
+          .classList.remove("active");
+        document.getElementById("resource-panel").classList.add("active");
+        document.getElementById("question-panel").classList.remove("active");
+
+        // 隐藏题目练习相关元素
+        buttonGroup.style.display = "none";
+        timerContainer.style.display = "none";
+        progressBarContainer.style.display = "none";
+        questionHeader.style.display = "none";
+
+        // 加载资源内容
+        loadResourceContent();
+      }
+
+      // 初始化标签页数据
+      function initializeTabData(key) {
+        if (!hintCounts[key]) {
+          hintCounts[key] = knowledgePoints[key].map(() => 0);
+        }
+
+        if (!userAnswers[key]) {
+          userAnswers[key] = knowledgePoints[key].map(() => ({
+            answer: null,
+            accumulatedTime: 0,
+            isTiming: false,
+            lastStartTime: null,
+          }));
+        }
+        if (!userMoods[key]) {
+          userMoods[key] = knowledgePoints[key].map(() => ({
+            moods: ["专注"], // 默认选择专注
+            autoSelected: true,
+          }));
+        }
+      }
+
+      // 生成选择题选项
+      function generateChoiceOptions(options, userAnswer, isDisabled) {
+        let html = "";
+        Object.entries(options).forEach(([key, value]) => {
+          const isSelected = userAnswer === key;
+          html += `
+            <div class="option-item ${isSelected ? "selected" : ""} ${
+            isDisabled ? "disabled" : ""
+          }" 
+                 data-value="${key}" 
+                 onclick="${isDisabled ? "" : `selectOption('${key}')`}">
+              <div class="option-radio"></div>
+              <div class="option-label">${key}</div>
+              <div class="option-text">${value}</div>
+            </div>
+          `;
+        });
+        return html;
+      }
+
+      // 生成判断题选项
+      function generateJudgmentOptions(userAnswer, isDisabled) {
+        const options = [
+          { key: "对", value: "正确" },
+          { key: "错", value: "错误" },
+        ];
+
+        let html = "";
+        options.forEach((option) => {
+          const isSelected = userAnswer === option.key;
+          html += `
+            <div class="option-item ${isSelected ? "selected" : ""} ${
+            isDisabled ? "disabled" : ""
+          }" 
+                 data-value="${option.key}" 
+                 onclick="${isDisabled ? "" : `selectOption('${option.key}')`}">
+              <div class="option-radio"></div>
+              
+              <div class="option-text">${option.value}</div>
+            </div>
+          `;
+        });
+        return html;
+      }
+      // 生成简答题输入框
+      function generateShortAnswerOptions(userAnswer, isDisabled) {
+        const answer = userAnswer || "";
+        const disabledAttr = isDisabled ? "disabled" : "";
+        return `
+    <div class="short-answer-container">
+      <textarea 
+        class="short-answer-input" 
+        placeholder="请输入你的答案..." 
+        ${disabledAttr}
+        oninput="handleShortAnswerInput(this.value)"
+      >${answer}</textarea>
+    </div>
+  `;
+      }
+      // 处理简答题输入
+      function handleShortAnswerInput(value) {
+        if (submittedTabs[currentTab]) return;
+
+        // 保存答案
+        if (userAnswers[currentTab] && userAnswers[currentTab][currentIndex]) {
+          userAnswers[currentTab][currentIndex].answer = value;
+          updateButtonStates(); // 确保在输入时更新按钮状态
+          buildTabs(); // 更新标签页进度显示
+          updateProgressBar(); // 更新进度条
+        }
+      }
+
+      // 选择选项
+      function selectOption(value) {
+        if (submittedTabs[currentTab]) return;
+
+        // 移除之前的选择
+        answerContainer.querySelectorAll(".option-item").forEach((item) => {
+          item.classList.remove("selected");
+        });
+
+        // 添加新的选择
+        const selectedItem = answerContainer.querySelector(
+          `[data-value="${value}"]`
+        );
+        if (selectedItem) {
+          selectedItem.classList.add("selected");
+        }
+
+        // 保存答案
+        saveCurrentAnswerInstant();
+        updateButtonStates();
+        buildTabs(); // 更新标签页进度显示
+      }
+
+      // 加载题目
+      function loadQuestion() {
+        if (!currentTab) return;
+
+        const userData = userAnswers[currentTab][currentIndex];
+        const q = knowledgePoints[currentTab][currentIndex];
+        const isSubmitted = submittedTabs[currentTab];
+
+        // 更新题目容器的类名
+        questionContainer.className = `font-mono ${
+          q.type === "选择题" ? "choice-question" : "judgment-question"
+        }`;
+
+        // 更新题目类型徽章
+        const badge = questionContainer.querySelector(".question-type-badge");
+        badge.textContent = q.type;
+
+        // 更新题目显示
+        questionText.textContent = q.question;
+        questionNumberEl.textContent = `第 ${currentIndex + 1} 题 / 共 ${
+          knowledgePoints[currentTab].length
+        } 题`;
+
+        // 生成答案选项
+        let optionsHtml = "";
+        if (q.type === "选择题") {
+          optionsHtml = generateChoiceOptions(
+            q.options,
+            userData.answer,
+            isSubmitted
+          );
+        } else if (q.type === "判断题") {
+          optionsHtml = generateJudgmentOptions(userData.answer, isSubmitted);
+        } else if (q.type === "简答题" || q.type === "证明题") {
+          optionsHtml = generateShortAnswerOptions(
+            userData.answer,
+            isSubmitted
+          );
+        }
+
+        answerContainer.innerHTML = optionsHtml;
+        answerContainer.className = isSubmitted ? "disabled" : "";
+
+        // 重置反馈
+        feedbackEl.textContent = "";
+        feedbackEl.className = "";
+
+        // 更新按钮状态
+        updateButtonStates();
+
+        // 更新进度条
+        updateProgressBar();
+
+        // 处理计时显示
+        updateTimerState();
+        // 更新心情面板
+        updateMoodPanel();
+      }
+
+      // 更新心情面板状态
+      function updateMoodPanel() {
+        if (!currentTab) return;
+
+        const moodData = userMoods[currentTab][currentIndex];
+        const checkboxes = document.querySelectorAll(
+          '#mood-panel input[type="checkbox"]'
+        );
+
+        // 重置所有选项
+        checkboxes.forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+
+        // 根据当前题目设置心情选项
+        moodData.moods.forEach((mood) => {
+          const checkbox = document.querySelector(
+            `#mood-panel input[value="${mood}"]`
+          );
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+
+        // 更新自动检测状态显示
+        const indicator = document.querySelector(".mood-auto-indicator span");
+        if (moodAutoUpdateEnabled && moodData.autoSelected) {
+          indicator.textContent = "自动检测中...";
+        } else if (!moodData.autoSelected) {
+          indicator.textContent = "手动选择";
+        }
+      }
+
+      // 保存当前心情状态
+      function saveCurrentMood() {
+        if (!currentTab) return;
+
+        const checkboxes = document.querySelectorAll(
+          '#mood-panel input[type="checkbox"]:checked'
+        );
+        const selectedMoods = Array.from(checkboxes).map((cb) => cb.value);
+
+        userMoods[currentTab][currentIndex] = {
+          moods: selectedMoods,
+          autoSelected: !moodAutoUpdateEnabled, // 如果是手动选择，则标记为非自动选择
+        };
+      }
+      // 添加内容 tab 切换功能
+      document.addEventListener("DOMContentLoaded", function () {
+        const contentTabs = document.querySelectorAll(".content-tab");
+        const contentPanels = document.querySelectorAll(".content-panel");
+        const buttonGroup = document.querySelector(".button-group");
+        const timerContainer = document.getElementById("timer-container");
+        const questionHeader = document.getElementById("question-header");
+        const progressBarContainer = document.getElementById(
+          "progress-bar-container"
+        );
+
+        contentTabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            const tabName = tab.getAttribute("data-tab");
+
+            // 如果点击的是当前激活的 tab，不执行任何操作
+            if (tab.classList.contains("active")) {
+              return;
+            }
+
+            // 保存当前答案和计时状态
+            saveCurrentAnswer();
+
+            // 根据当前面板决定是否停止计时
+            if (tabName === "resource") {
+              // 切换到资源面板时停止计时
+              stopCurrentTiming();
+            }
+
+            // 更新 tab 激活状态
+            contentTabs.forEach((t) => t.classList.remove("active"));
+            tab.classList.add("active");
+
+            // 显示对应面板
+            contentPanels.forEach((panel) => {
+              panel.classList.remove("active");
+              if (panel.id === `${tabName}-panel`) {
+                panel.classList.add("active");
+              }
+            });
+
+            // 根据当前面板控制元素显示
+            if (tabName === "question") {
+              // 题目练习面板显示所有元素
+              buttonGroup.style.display = "flex";
+              timerContainer.style.display = "flex";
+              progressBarContainer.style.display = "block";
+              questionHeader.style.display = "flex";
+              questionHeader.style.justifyContent = "space-between";
+
+              // 切换回题目面板时恢复计时
+              if (currentTab && !submittedTabs[currentTab]) {
+                startTiming();
+              }
+            } else {
+              // 资源面板隐藏不需要的元素
+              buttonGroup.style.display = "none";
+              timerContainer.style.display = "none";
+              progressBarContainer.style.display = "none";
+              questionHeader.style.display = "none";
+            }
+
+            // 如果切换到资源面板，加载资源内容
+            if (tabName === "resource") {
+              loadResourceContent();
+            }
+          });
+        });
+      });
+
+      // 改进的资源内容加载函数
+      function loadResourceContent() {
+        if (!currentTab || !rawData) return;
+
+        const resourceTitle = document.getElementById("resource-title");
+        const resourceContent = document.getElementById("resource-content");
+
+        resourceTitle.textContent = `${currentTab} - 学习资源`;
+
+        // 查找当前知识点的资源
+        const currentResource = rawData.find((item) => {
+          const knowledgePointsInItem = Object.keys(
+            safeParseQuestions(item.questions)
+          );
+          return knowledgePointsInItem.includes(currentTab);
+        });
+
+        if (currentResource && currentResource.resources) {
+          try {
+            let resources = currentResource.resources;
+
+            // 如果是字符串，尝试解析
+            if (typeof resources === "string") {
+              resources = JSON.parse(resources);
+            }
+
+            resourceContent.innerHTML = "";
+
+            if (Array.isArray(resources)) {
+              // 处理数组格式的资源
+              resources.forEach((resource, index) => {
+                const resourceCard = createResourceCard(resource, index);
+                resourceContent.appendChild(resourceCard);
+              });
+            } else if (typeof resources === "object") {
+              // 处理对象格式的资源
+              Object.entries(resources).forEach(([key, resource], index) => {
+                const resourceCard = createResourceCard(resource, index);
+                resourceContent.appendChild(resourceCard);
+              });
+            } else {
+              // 处理其他格式
+              const resourceCard = createResourceCard(resources, 0);
+              resourceContent.appendChild(resourceCard);
+            }
+          } catch (e) {
+            resourceContent.innerHTML = createEmptyState("资源内容解析失败");
+            console.error("资源解析错误:", e);
+          }
+        } else {
+          resourceContent.innerHTML = createEmptyState();
+        }
+      }
+
+      // 改进的资源卡片创建函数
+      function createResourceCard(resource, index) {
+        const card = document.createElement("div");
+        card.className = "resource-card";
+        card.style.animationDelay = `${index * 0.1}s`;
+
+        let iconType = "📚";
+        let iconClass = "courseware-icon";
+        let title = "学习资源";
+        let description = "";
+        let resourceTime = null;
+        let resourceLevel = null;
+
+        // 处理不同格式的资源数据
+        if (typeof resource === "string") {
+          // 简单字符串资源
+          description = resource;
+
+          // 尝试解析JSON字符串
+          try {
+            const parsed = JSON.parse(resource);
+            if (parsed.resource_type || parsed.resource) {
+              resource = parsed; // 转换为对象处理
+            }
+          } catch (e) {
+            // 如果不是JSON，继续作为字符串处理
+          }
+        }
+
+        // 处理对象格式的资源
+        if (typeof resource === "object" && resource !== null) {
+          // 检查是否有嵌套的resource字段
+          const resourceData = resource.resource || resource;
+
+          // 获取资源类型
+          const resourceType =
+            resource.resource_type || resourceData.type || "";
+
+          // 获取内容
+          const content =
+            resourceData.content || resourceData.title || resource.title || "";
+
+          // 设置标题
+          title = resourceType || "学习资源";
+
+          // 设置描述
+          description = content;
+
+          // 获取时间和等级信息
+          if (resourceData.time) {
+            resourceTime = resourceData.time;
+          }
+          if (resourceData.level) {
+            resourceLevel = resourceData.level;
+          }
+
+          // 根据类型设置图标 - 新增四种资源类型
+          if (
+            resourceType.includes("视频") ||
+            content.includes(".mp4") ||
+            content.includes("视频")
+          ) {
+            iconType = "🎥";
+            iconClass = "video-icon";
+          } else if (
+            resourceType.includes("论文") ||
+            content.includes(".pdf") ||
+            content.includes("论文")
+          ) {
+            iconType = "📄";
+            iconClass = "paper-icon";
+          } else if (
+            resourceType.includes("课件") ||
+            content.includes(".ppt") ||
+            content.includes("课件")
+          ) {
+            iconType = "📊";
+            iconClass = "courseware-icon";
+          } else if (
+            resourceType.includes("习题集") ||
+            content.includes("习题") ||
+            content.includes("练习")
+          ) {
+            iconType = "📝";
+            iconClass = "exercise-icon";
+          }
+        }
+
+        // 构建元数据信息
+        let metaHtml = "";
+        if (resourceTime || resourceLevel) {
+          metaHtml = `
+            <div class="resource-meta">
+              ${
+                resourceTime
+                  ? `<div class="resource-time"><span>⏱</span> ${resourceTime} 分钟</div>`
+                  : ""
+              }
+              ${
+                resourceLevel
+                  ? `<div class="resource-level">等级 ${resourceLevel}</div>`
+                  : ""
+              }
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="resource-type-icon ${iconClass}">
+            ${iconType}
+          </div>
+          <div class="resource-title">${title}</div>
+          <div class="resource-description">${description}</div>
+          ${metaHtml}
+        `;
+
+        return card;
+      }
+
+      // 创建空状态
+      function createEmptyState(message = "暂无相关学习资源") {
+        return `
+          <div class="empty-state">
+            <div class="empty-illustration">
+              <div class="book-stack">
+                <div class="book"></div>
+                <div class="book"></div>
+                <div class="book"></div>
+              </div>
+              <div class="search-animation">🔍</div>
+            </div>
+            <div class="empty-message">${message}</div>
+            <div class="empty-suggestion">继续完成题目练习，更多资源即将推送给你！</div>
+          </div>
+        `;
+      }
+
+      // 更新计时器状态
+      function updateTimerState() {
+        const userData = userAnswers[currentTab][currentIndex];
+        const isSubmitted = submittedTabs[currentTab];
+
+        if (isSubmitted) {
+          // 已提交的模块显示该题的总用时
+          timerContainer.classList.remove("running");
+          timerContainer.classList.add("submitted");
+          updateTimerDisplay(userData.accumulatedTime);
+        } else {
+          // 未提交的模块开始计时
+          timerContainer.classList.remove("submitted");
+          startTiming();
+        }
+      }
+
+      // 更新按钮状态 - 修复提交按钮状态重置问题，并添加完成检测按钮逻辑
+      // 替换 updateButtonStates 函数
+      function updateButtonStates() {
+        const isSubmitted = submittedTabs[currentTab];
+        const progress = getProgress(currentTab);
+
+        // 提示按钮
+        // 提示按钮 - 系统提醒模式下不禁用
+        if (hintBtn.classList.contains("system-reminder-mode")) {
+          hintBtn.disabled = false; // 系统提醒模式下始终可用
+        } else {
+          hintBtn.disabled = isSubmitted; // 普通提示模式下根据提交状态决定
+        }
+
+        // 提交按钮状态重置 - 这是关键修复
+        if (isSubmitted) {
+          submitBtn.style.display = "none";
+          submitBtn.disabled = false; // 重置 disabled 状态
+          submitBtn.innerHTML = '<span class="btn-icon">✓</span> 提交本模块'; // 重置 innerHTML
+          viewReportBtn.style.display = "inline-flex";
+        } else {
+          viewReportBtn.style.display = "none";
+          submitBtn.disabled = false; // 确保提交按钮可用
+          submitBtn.innerHTML = '<span class="btn-icon">✓</span> 提交本模块'; // 确保显示正确的文本
+
+          // 无论什么题型，都必须完成所有题目才能提交
+          submitBtn.style.display =
+            progress.done === progress.total ? "inline-flex" : "none";
+        }
+
+        // 更新完成检测按钮的显示状态
+        updateCompleteCheckButtonVisibility();
+
+        // 更新查看提示按钮状态
+        updateHintButtonState();
+      }
+
+      // 开始计时
+      function startTiming() {
+        if (!currentTab || submittedTabs[currentTab]) return;
+
+        const userData = userAnswers[currentTab][currentIndex];
+
+        if (!userData.accumulatedTime) userData.accumulatedTime = 0;
+
+        userData.lastStartTime = Date.now();
+        userData.isTiming = true;
+
+        timerContainer.classList.add("running");
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          const currentTime =
+            userData.accumulatedTime + (Date.now() - userData.lastStartTime);
+          updateTimerDisplay(currentTime);
+        }, 200);
+      }
+
+      // 停止当前计时
+      function stopCurrentTiming() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        timerContainer.classList.remove("running");
+      }
+
+      function updateTimerDisplay(milliseconds) {
+        const seconds = Math.floor(milliseconds / 1000);
+        timerEl.textContent = `${seconds}秒`;
+
+        // 自动更新心情状态
+        if (moodAutoUpdateEnabled && currentTab) {
+          const moodData = userMoods[currentTab][currentIndex];
+          let newMoods = [];
+
+          if (seconds <= 15) {
+            newMoods = ["专注"];
+          } else if (seconds <= 60) {
+            newMoods = ["专注", "困惑"];
+          } else if (seconds <= 90) {
+            newMoods = ["沮丧", "困惑"];
+          } else {
+            newMoods = ["无聊", "困惑"];
+          }
+
+          // 只有当心情状态发生变化时才更新
+          if (JSON.stringify(moodData.moods) !== JSON.stringify(newMoods)) {
+            moodData.moods = newMoods;
+            moodData.autoSelected = true;
+            updateMoodPanel();
+          }
+        }
+      }
+      // 保存当前答案
+      function saveCurrentAnswer() {
+        if (!currentTab || !userAnswers[currentTab]?.[currentIndex]) return;
+
+        const selectedOption = answerContainer.querySelector(
+          ".option-item.selected"
+        );
+        const userData = userAnswers[currentTab][currentIndex];
+        console.log(userData);
+        if (selectedOption) {
+          userData.answer = selectedOption.dataset.value;
+        }
+
+        // 更新累计时间
+        if (userData.isTiming && userData.lastStartTime) {
+          userData.accumulatedTime += Date.now() - userData.lastStartTime;
+          userData.lastStartTime = null;
+          userData.isTiming = false;
+        }
+      }
+
+      // 停止所有计时
+      function stopAllTiming() {
+        if (!currentTab) return;
+
+        userAnswers[currentTab].forEach((userData) => {
+          if (userData.isTiming && userData.lastStartTime) {
+            userData.accumulatedTime += Date.now() - userData.lastStartTime;
+            userData.lastStartTime = null;
+          }
+          userData.isTiming = false;
+        });
+
+        stopCurrentTiming();
+      }
+
+      // 更新进度条
+      function updateProgressBar() {
+        const { done, total } = getProgress(currentTab);
+        progressBar.style.width = `${(done / total) * 100}%`;
+      }
+
+      // 上一题按钮事件
+      // 修改上一题按钮事件
+      prevBtn.onclick = () => {
+        saveCurrentAnswer();
+        stopCurrentTiming();
+
+        if (currentIndex > 0) {
+          currentIndex--;
+          loadQuestion();
+        } else {
+          loadQuestion();
+          feedbackEl.textContent = "📍 已经是第一题了";
+          feedbackEl.className = "error-feedback";
+          setTimeout(() => {
+            feedbackEl.textContent = "";
+            feedbackEl.className = "";
+          }, 2000);
+        }
+        updateMoodPanel(); // 添加这行
+        buildTabs(); // 更新标签页进度显示
+        updateButtonStates(); // 确保更新按钮状态
+      };
+
+      // 修改下一题按钮事件
+      nextBtn.onclick = () => {
+        console.log(currentTabIndex);
+        saveCurrentAnswer();
+        stopCurrentTiming();
+        updateProgressBar();
+
+        const total = knowledgePoints[currentTab].length;
+        if (currentIndex < total - 1) {
+          currentIndex++;
+          loadQuestion();
+        } else {
+          loadQuestion();
+          feedbackEl.textContent = "📍 已经是最后一题了";
+          feedbackEl.className = "error-feedback";
+          setTimeout(() => {
+            feedbackEl.textContent = "";
+            feedbackEl.className = "";
+          }, 2000);
+        }
+        updateMoodPanel(); // 添加这行
+        buildTabs(); // 更新标签页进度显示
+        updateButtonStates(); // 确保更新按钮状态
+      };
+
+      // 生成报告数据
+      function generateReportData(tabKey) {
+        if (!tabKey || !knowledgePoints[tabKey]) return null;
+
+        const questions = knowledgePoints[tabKey];
+        const answers = userAnswers[tabKey];
+
+        const result = {
+          knowledgePoint: tabKey,
+          totalQuestions: questions.length,
+          correctCount: 0,
+          incorrectCount: 0,
+          totalTime: 0,
+          totalHints: 0,
+          questions: [],
+        };
+
+        questions.forEach((q, i) => {
+          const ua = answers[i];
+          const correctAnswer = q.answer;
+          const userAns = ua.answer;
+          const isCorrect = userAns === correctAnswer;
+
+          if (isCorrect) result.correctCount++;
+          else result.incorrectCount++;
+
+          result.totalTime += ua.accumulatedTime;
+          result.totalHints += hintCounts[tabKey]?.[i] || 0;
+
+          // 获取答案显示文本
+          let userAnswerText = userAns || "未作答";
+          let correctAnswerText = correctAnswer;
+
+          if (q.type === "选择题" && q.options) {
+            if (userAns && q.options[userAns]) {
+              userAnswerText = `${userAns}. ${q.options[userAns]}`;
+            }
+            if (q.options[correctAnswer]) {
+              correctAnswerText = `${correctAnswer}. ${q.options[correctAnswer]}`;
+            }
+          } else if (q.type === "判断题") {
+            userAnswerText =
+              userAns === "对"
+                ? "对 (正确)"
+                : userAns === "错"
+                ? "错 (错误)"
+                : "未作答";
+            correctAnswerText =
+              correctAnswer === "对" ? "对 (正确)" : "错 (错误)";
+          }
+
+          result.questions.push({
+            question: q.question,
+            questionType: q.type,
+            userAnswer: userAnswerText,
+            correctAnswer: correctAnswerText,
+            isCorrect: isCorrect,
+            timeSpent: Math.floor(ua.accumulatedTime / 1000),
+            hintCount: hintCounts[tabKey]?.[i] || 0,
+            explanation: q.explanation || "",
+          });
+        });
+
+        return result;
+      }
+
+      // 显示报告
+      function showReport(reportData) {
+        if (!reportData) return;
+
+        reportContainer.innerHTML = "";
+
+        // 添加统计信息
+        const accuracy = (
+          (reportData.correctCount / reportData.totalQuestions) *
+          100
+        ).toFixed(1);
+        const avgTime = Math.floor(
+          reportData.totalTime / reportData.totalQuestions / 1000
+        );
+
+        const statsHtml = `
+          <div class="report-stats">
+            <div class="stat-item stat-correct">
+              <div class="stat-value">${accuracy}%</div>
+              <div class="stat-label">正确率</div>
+            </div>
+            <div class="stat-item stat-time">
+              <div class="stat-value">${avgTime}秒</div>
+              <div class="stat-label">平均用时</div>
+            </div>
+            <div class="stat-item stat-hints">
+              <div class="stat-value">${reportData.totalHints}</div>
+              <div class="stat-label">总提示次数</div>
+            </div>
+          </div>
+        `;
+        reportContainer.innerHTML = statsHtml;
+
+        // 添加每道题详情
+        reportData.questions.forEach((q, index) => {
+          const item = document.createElement("div");
+          item.className = `report-item ${
+            q.isCorrect ? "correct" : "incorrect"
+          }`;
+
+          item.innerHTML = `
+            <div class="report-question">
+              <span class="question-type-badge ${
+                q.questionType === "选择题"
+                  ? "choice-question"
+                  : "judgment-question"
+              }">${q.questionType}</span>
+              ${index + 1}. ${q.question}
+            </div>
+            <div class="report-answer">
+              <div class="report-label">你的答案：</div>
+              <div class="report-value ${
+                q.isCorrect ? "report-correct" : "report-incorrect"
+              }">
+                ${q.userAnswer}
+              </div>
+            </div>
+            ${
+              !q.isCorrect
+                ? `
+              <div class="report-answer">
+                <div class="report-label">正确答案：</div>
+                <div class="report-value report-correct">${q.correctAnswer}</div>
+              </div>
+            `
+                : ""
+            }
+            ${
+              q.explanation
+                ? `
+              <div class="report-explanation">
+                <div class="report-label">📝 题目解析：</div>
+                <div class="report-explanation-text">${q.explanation}</div>
+              </div>
+            `
+                : ""
+            }
+            <div class="report-detail">
+              <div>⏱ 用时: ${q.timeSpent}秒</div>
+              <div>💡 提示: ${q.hintCount}次</div>
+            </div>
+          `;
+
+          reportContainer.appendChild(item);
+        });
+
+        reportModal.style.display = "flex";
+      }
+
+      // 提交答题结果到后端
+      async function submitResultsToBackend(knowledgePoint, reportData) {
+        const submitUrl = `http://172.20.192.249:3000/api/learning-paths/${pathId}/submit`;
+        const submitData = {
+          path_id: pathId,
+          user_id: user_id,
+          skill_id: rawData[currentTabIndex].skill_id,
+          knowledge_point: knowledgePoint,
+          total_questions: reportData.totalQuestions,
+          correct_count: reportData.correctCount,
+          incorrect_count: reportData.incorrectCount,
+          submitted_at: new Date().toISOString(),
+          questions_detail: reportData.questions.map((q, index) => ({
+            question_number: index + 1,
+            question_text: q.question,
+            question_type: q.questionType,
+            user_answer: q.userAnswer,
+            correct_answer: q.correctAnswer,
+            is_correct: q.isCorrect,
+            time_spent: q.timeSpent,
+            hint_count: q.hintCount,
+          })),
+        };
+        console.log("提交数据:", submitData);
+
+        try {
+          const response = await fetch(submitUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(submitData),
+          });
+          if (response.status != 201) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log("提交结果:", result);
+
+          return { success: true, data: result };
+        } catch (error) {
+          console.error("提交失败:", error);
+          return { success: false, error: error.message };
+        }
+      }
+
+      // 提交按钮事件 - 修改为传递掌握状态给弹窗，并添加完成检查
+      submitBtn.onclick = async () => {
+        // 添加提交确认
+        if (!confirm("确定要提交本模块的所有答案吗？提交后将无法修改。")) {
+          return;
+        }
+
+        // 显示提交中状态
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner"></span> 提交中...';
+
+        saveCurrentAnswer();
+        stopAllTiming();
+
+        const questions = knowledgePoints[currentTab];
+        const answers = userAnswers[currentTab];
+
+        // 生成并保存报告数据
+        const reportData = generateReportData(currentTab);
+        tabReports[currentTab] = reportData;
+
+        const correctCount = reportData.correctCount;
+        const totalQuestions = reportData.totalQuestions;
+        const correctPercentage = (
+          (correctCount / totalQuestions) *
+          100
+        ).toFixed(1);
+
+        // 提交结果到后端
+        const submitResult = await submitResultsToBackend(
+          currentTab,
+          reportData
+        );
+
+        if (submitResult.success) {
+          console.log("提交成功:", submitResult.data);
+
+          // 保存学习次数和掌握状态到报告数据中，用于后续判断
+          tabReports[currentTab].learningCount = submitResult.data.count;
+          tabReports[currentTab].masteryResult = (
+            submitResult.data.result || ""
+          ).trim();
+
+          // 提交成功
+          feedbackEl.textContent = `🎉 本模块完成并已保存！共 ${totalQuestions} 题，正确 ${correctCount} 题，正确率 ${correctPercentage}%。学习次数为${submitResult.data.count}，检测结果为：${submitResult.data.result}`;
+          feedbackEl.className = "success-feedback";
+
+          // 标记当前知识点为已提交
+          submittedTabs[currentTab] = true;
+
+          // 检查是否为"未掌握"状态
+          const masteryResult = (submitResult.data.result || "").trim();
+          const learningCount = submitResult.data.count || 0;
+
+          console.log(
+            "掌握状态检查:",
+            masteryResult,
+            "学习次数:",
+            learningCount
+          ); // 调试信息
+
+          // 根据学习次数和掌握状态决定弹窗类型
+          if (learningCount > 3) {
+            console.log("学习次数超过3次，显示学习路径更换弹窗"); // 调试信息
+            setTimeout(() => {
+              showPathChangeModal();
+            }, 2000); // 2秒后显示弹窗，让用户先看到提交结果
+          } else if (masteryResult === "未掌握") {
+            console.log("检测到未掌握状态，显示更换资源弹窗"); // 调试信息
+            setTimeout(() => {
+              // 传入实际的掌握状态
+              showResourceChangeModal(masteryResult);
+            }, 2000); // 2秒后显示弹窗，让用户先看到提交结果
+          } else {
+            console.log("掌握状态良好，无需显示弹窗"); // 调试信息
+          }
+
+          // 解锁下一个知识点 - 修复解锁逻辑
+          const currentKeyIndex = keys.indexOf(currentTab);
+          if (masteryResult !== "未掌握") {
+            // 只有掌握了才解锁下一个知识点
+            if (currentKeyIndex !== -1 && currentKeyIndex < keys.length - 1) {
+              const nextKey = keys[currentKeyIndex + 1];
+              unlockedTabs[nextKey] = true;
+              console.log("解锁下一个知识点:", nextKey);
+            }
+          } else {
+            // 如果未掌握，不解锁下一个知识点
+            console.log("当前知识点未掌握，不解锁下一个知识点");
+          }
+
+          // 更新界面
+          buildTabs();
+          updateButtonStates();
+          updateProgressBar(); // 确保进度条更新到100%
+
+          // 禁用答案选择
+          answerContainer.className = "disabled";
+
+          // 更新计时器状态
+          timerContainer.classList.remove("running");
+          timerContainer.classList.add("submitted");
+
+          // 检查是否所有知识点都已完成
+          checkAllKnowledgePointsCompleted();
+        } else {
+          // 提交失败
+          feedbackEl.textContent = `❌ 提交失败：${submitResult.error}。请检查网络连接后重试。`;
+          feedbackEl.className = "error-feedback";
+
+          // 恢复提交按钮
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span class="btn-icon">✓</span> 提交本模块';
+
+          // 显示重试提示
+          setTimeout(() => {
+            if (confirm("提交失败，是否重试？")) {
+              submitBtn.click(); // 重新触发提交
+            }
+          }, 2000);
+        }
+      };
+
+      // 查看报告按钮事件
+      viewReportBtn.onclick = () => {
+        if (!submittedTabs[currentTab]) return;
+
+        const reportData = tabReports[currentTab];
+        if (reportData) {
+          showReport(reportData);
+        }
+      };
+
+      // 关闭模态框事件
+      closeModal.onclick = () => {
+        reportModal.style.display = "none";
+      };
+
+      // 点击模态框外部关闭
+      window.onclick = (event) => {
+        if (event.target === reportModal) {
+          reportModal.style.display = "none";
+        }
+      };
+
+      // ESC键关闭模态框
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && reportModal.style.display === "flex") {
+          reportModal.style.display = "none";
+        }
+        if (
+          e.key === "Escape" &&
+          resourceChangeModal.style.display === "flex"
+        ) {
+          hideResourceChangeModal();
+        }
+        if (e.key === "Escape" && pathChangeModal.style.display === "flex") {
+          hidePathChangeModal();
+        }
+        if (e.key === "Escape" && pathSelectionModal.style.display === "flex") {
+          hidePathSelectionModal();
+        }
+        if (e.key === "Escape" && returnHomeModal.style.display === "flex") {
+          hideReturnHomeModal();
+        }
+        if (
+          e.key === "Escape" &&
+          completionReminderModal.style.display === "flex"
+        ) {
+          hideCompletionReminderModal();
+        }
+      });
+
+      // 初始化应用
+      init();
+
+      // 页面可见性变化时处理计时
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          // 页面隐藏时暂停计时
+          if (timerInterval) {
+            saveCurrentAnswer();
+          }
+        } else {
+          // 页面显示时恢复计时（仅当在题目面板时）
+          if (
+            currentTab &&
+            !submittedTabs[currentTab] &&
+            document
+              .getElementById("question-panel")
+              .classList.contains("active")
+          ) {
+            startTiming();
+          }
+        }
+      });
+
+      // 新增：页面加载完成后初始化按钮状态
+      document.addEventListener("DOMContentLoaded", function () {
+        // 初始化完成检测按钮状态
+        updateCompleteCheckButtonVisibility();
+        // 初始化查看提示按钮状态
+        updateHintButtonState();
+      });
+    </script>
+  </body>
+</html>
